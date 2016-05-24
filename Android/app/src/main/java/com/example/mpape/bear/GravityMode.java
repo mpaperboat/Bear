@@ -1,5 +1,8 @@
 package com.example.mpape.bear;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Matrix;
 import android.net.Uri;
@@ -11,10 +14,14 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.*;
 import java.util.Random;
 import android.util.Log;
@@ -39,9 +46,12 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.widget.TextView;
 import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
+
 import android.widget.Toast;
 
-public class GravityMode extends AppCompatActivity implements SensorEventListener,SurfaceHolder.Callback {
+public class GravityMode extends Activity implements SensorEventListener,SurfaceHolder.Callback {
     private SensorManager mSensorManager;
     private Sensor mSensor;
     private static final String TAG="TestTag";
@@ -49,6 +59,14 @@ public class GravityMode extends AppCompatActivity implements SensorEventListene
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
     private Camera camera = null;
+    private BluetoothAdapter mBTAdapter;
+    private BluetoothSocket mmSocket;
+    private BluetoothDevice mmDevice;
+    private OutputStream mmOutputStream;
+    private InputStream mmInputStream;
+    private UUID uuid;
+    private int bconnected;
+    private int statu;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +93,90 @@ public class GravityMode extends AppCompatActivity implements SensorEventListene
         surfaceholder = surfaceview.getHolder();
         surfaceholder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceholder.addCallback(this);
+        Button button2 = (Button) findViewById(R.id.button2);
+        button2.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                try {
+                    checkblue();
+                    if(getdbg()=="Bluetooth On")
+                        return;
+                    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+                    Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
+                    if (pairedDevices.size() != 1) {
+                        System.out.print(pairedDevices.size());
+                        throw new Exception("haha");
+                    }
+
+                    mmDevice = pairedDevices.iterator().next();
+                    uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                    mmSocket.connect();
+                    mmOutputStream = mmSocket.getOutputStream();
+                    mmInputStream = mmSocket.getInputStream();
+                    setdbg("Bluetooth On");
+                    statu=0;
+                } catch (Exception e) {
+                    setdbg("Bluetooth Error");
+                }
+            }
+        });
+        final ImageButton ibutton = (ImageButton) findViewById(R.id.button6);
+        ibutton.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent e){
+                checkblue();
+                switch(e.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                        if(discheck())
+                        sendData("W");
+                        System.out.print("w pressed");
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        sendData("Q");
+                        return true;
+                }
+                return false;
+            }
+        });
+        final ImageButton ibutton2 = (ImageButton) findViewById(R.id.button3);
+        ibutton2.setOnTouchListener(new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent e){
+                checkblue();
+                switch(e.getAction()){
+                    case MotionEvent.ACTION_DOWN:
+                        sendData("S");
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                        sendData("Q");
+                        return true;
+                }
+                return false;
+            }
+        });
+    }
+    void  checkblue(){
+        if(!sendData("-")){
+            setdbg("Bluetooth Error");
+        }
+    }
+    void setdbg(String s){
+        TextView dbg=(TextView)findViewById(R.id.textView);
+        dbg.setText(s);
+    }
+    String getdbg(){
+        TextView dbg=(TextView)findViewById(R.id.textView);
+        return String.valueOf(dbg.getText());
+    }
+    boolean sendData(String m){
+        try{
+            String msg = m;
+            mmOutputStream.write(msg.getBytes());
+           // System.out.println("Data Sent");
+            return true;
+        }catch (Exception e){
+            return false;
+        }
     }
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
@@ -98,11 +200,50 @@ public class GravityMode extends AppCompatActivity implements SensorEventListene
             t/=5;
             t=Math.pow(t,1.0/1);
             t=t*sign*100;
-            Log.i(TAG,String.valueOf(t));
+            //Log.i(TAG,String.valueOf(t));
             ps.offset=t;
+            if(t>=40){
+                if(statu!=1)
+                sendData("D");
+                statu=1;
+            }else if(t<=-40){
+                if(statu!=-1)
+                sendData("A");
+                statu=-1;
+            }else{
+               // sendData("A");
+                if(statu!=0) {
+                    sendData("Q");
+                    statu = 0;
+                }
+            }
             // Log.i(TAG,ps.offset.t));
             ps.invalidate();
         }
+    }
+    boolean discheck(){
+        try{
+        sendData("C");
+        byte[] buff=new byte[10];
+            buff[0]='*';
+        for(int i=1;i<=100;++i){
+            if(mmInputStream.read(buff)!=0)
+                break;
+        }
+        if(buff[0]=='*'){
+            return false;
+        }
+         int t=0;
+            for(int i=0;buff[i]!=13&&buff[i]!=10;++i){
+                t=t*10+(buff[i]-'0');
+            }
+            Log.i(TAG,String.valueOf(t));
+            return true;
+        }
+        catch (Exception e){
+
+        }
+        return true;
     }
     @Override
     protected void onPause(){
@@ -151,6 +292,22 @@ public class GravityMode extends AppCompatActivity implements SensorEventListene
             camera.release();
             System.out.println("camera.release");
         }
+        try {
+            mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+            Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
+            if(pairedDevices.size()!=1)
+                throw new Exception("haha");
+            mmDevice=pairedDevices.iterator().next();
+            uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+            mmSocket.connect();
+            mmOutputStream = mmSocket.getOutputStream();
+            mmInputStream = mmSocket.getInputStream();
+            setdbg("Bluetooth On");
+            statu=0;
+        }catch (Exception e){
+            setdbg("Bluetooth Error");
+        }
     }
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
@@ -158,6 +315,11 @@ public class GravityMode extends AppCompatActivity implements SensorEventListene
         if (camera != null) {
             camera.stopPreview();
             camera.release();
+        }
+        try {
+            mmSocket.close();
+        }catch (Exception e){
+
         }
     }
 }

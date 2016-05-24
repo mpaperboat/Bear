@@ -17,7 +17,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import java.io.IOException;
 
-public class PhotoMode extends AppCompatActivity implements SurfaceHolder.Callback {
+public class PhotoMode extends Activity implements SurfaceHolder.Callback {
     private static Context context = null;
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
