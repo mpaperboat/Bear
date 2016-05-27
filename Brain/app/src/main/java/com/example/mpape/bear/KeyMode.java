@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.media.Image;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
@@ -235,7 +236,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                             pdate();
                             Socket s = ss.accept();
                             pdate();
-                            //System.out.println("连接成功!");
+                            System.out.println("连接成功!");
                             ins = s.getInputStream();
                             pdate();
                             //ims.acquire();
@@ -422,10 +423,12 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                         if(c!=null){
                             synchronized (surfaceholder) {
                                // try{ims.acquire();}catch (Exception e){}
-                                c.drawBitmap(image, 0, 0, new Paint());
+                                Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                                c.drawBitmap(image,null,tmp,new Paint());
+                                //c.drawBitmap(image, 0, 0, new Paint());
                                 //ims.release();
                             }
-                            //pdate();
+
                             surfaceholder.unlockCanvasAndPost(c);
                         }
                     }

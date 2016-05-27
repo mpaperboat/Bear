@@ -238,12 +238,15 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 camera.setDisplayOrientation(0);
                 parameters.setRotation(0);
             }
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             //List<Size>tmp=parameters.getSupportedPictureSizes();
             //List<int[]> tmp=parameters.getSupportedPreviewFpsRange();
             //System.out.println(parameters.getSupportedPreviewFpsRange().size());
            // for(int i=1;i==1;);
-            //parameters.setPictureSize(176,144);
-            parameters.setPreviewFpsRange(15000, 15000);
+            parameters.setPictureSize(176,144);
+            List<Size>haha=parameters.getSupportedPreviewSizes();
+            parameters.setPreviewSize(480,320);
+            parameters.setPreviewFpsRange(24000, 24000);
 
           //  parameters.setPreviewFrameRate(2);
             camera.setParameters(parameters);
@@ -323,7 +326,7 @@ class MyThread extends Thread {
         System.out.println("habg");
         pdate();
         this.myoutputstream = new ByteArrayOutputStream();;
-        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 30, myoutputstream);
+        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 70, myoutputstream);
         pdate();
         try {
             myoutputstream.flush();
@@ -335,8 +338,10 @@ class MyThread extends Thread {
             // 将图像数据通过Socket发送出去
             System.out.println("ha1");
             Socket tempSocket  = new Socket();
+            System.out.println("ha5");
             SocketAddress socAddress = new InetSocketAddress(ipname,6000);
             tempSocket.connect(socAddress);
+            System.out.println("ha6");
             //Socket tempSocket = new Socket(ipname,6000);
             outsocket = tempSocket.getOutputStream();
             ByteArrayInputStream inputstream = new ByteArrayInputStream(myoutputstream.toByteArray());
