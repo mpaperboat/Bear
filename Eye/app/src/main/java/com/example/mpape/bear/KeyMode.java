@@ -90,6 +90,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
     private String brainip;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        phttt=new Semaphore(10);
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -200,6 +201,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         Long time= dt.getTime();
         System.out.println(time);
     }
+    long ssss(){
+        Date dt= new Date();
+        Long time= dt.getTime();
+        return time;
+    }
     @Override
     protected void onPause(){
         super.onPause();
@@ -214,7 +220,8 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
         System.out.println("surfacechanged");
     }
-    @Override
+    Semaphore phttt;
+    long last=0;
     public void surfaceCreated(SurfaceHolder holder) {
         System.out.println("surfacecreated");
         try {
@@ -253,10 +260,15 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                         if (image != null) {
 
                             // 启用线程将图像数据发送出去
-                            Thread th = new MyThread( brainip,image,size);
+                            Thread th = new MyThread( brainip,image,size,phttt);
 
                            // pdate();
-                            th.start();
+                            //phttt.acquire();
+                          //  if(ssss()-last>200) {
+                                th.start();
+                              //  last=ssss();
+                          //  }
+                           // wait(100);
                             th.join();
                         }
                     } catch (Exception ex) {
@@ -294,12 +306,13 @@ class MyThread extends Thread {
     private String ipname;
     YuvImage image;
     Size size;
-    public MyThread(String ipname,YuvImage ima,Size siz) {
+    Semaphore phtt;
+    public MyThread(String ipname,YuvImage ima,Size siz,Semaphore pht) {
 
         this.ipname = ipname;
         image=ima;
         size=siz;
-
+        phtt=pht;
     }
     void pdate(){
         Date dt= new Date();
@@ -310,7 +323,7 @@ class MyThread extends Thread {
         System.out.println("habg");
         pdate();
         this.myoutputstream = new ByteArrayOutputStream();;
-        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 15, myoutputstream);
+        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 30, myoutputstream);
         pdate();
         try {
             myoutputstream.flush();
@@ -340,6 +353,7 @@ class MyThread extends Thread {
         }
         pdate();
         System.out.println("haed");
+        //phtt.release();
 
     }
 
