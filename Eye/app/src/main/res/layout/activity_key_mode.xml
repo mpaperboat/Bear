@@ -24,24 +24,4 @@
 
     </RelativeLayout>
 
-    <Button
-        android:layout_width="80dp"
-        android:layout_height="40dp"
-        android:textAllCaps="false"
-        android:text="WiFi"
-        android:id="@+id/button"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" android:background="@drawable/lee"
-        android:textColor="#ffffff" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:text="connection status"
-        android:id="@+id/textView"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:gravity="center_vertical|center_horizontal" android:keepScreenOn="true"/>
 </RelativeLayout>
