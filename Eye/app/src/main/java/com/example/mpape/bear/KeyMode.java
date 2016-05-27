@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -194,110 +195,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         }
 
     };
-    public String sendMsg(String ip,String msg) {
-
-        String res = null;
-        Socket socket = null;
-
-        try {
-            socket = new Socket(ip, SERVERPORT);
-            //向服务器发送消息
-            PrintWriter os = new PrintWriter(socket.getOutputStream());
-            os.println(msg);
-            os.flush();// 刷新输出流，使Server马上收到该字符串
-
-            //从服务器获取返回消息
-            DataInputStream input = new DataInputStream(socket.getInputStream());
-            res = input.readUTF();
-            System.out.println("server 返回信息：" + res);
-            Message.obtain(handler, 222, res).sendToTarget();//发送服务器返回消息
-
-        } catch (Exception unknownHost) {
-            System.out.println("You are trying to connect to an unknown host!");
-        } finally {
-            // 4: Closing connection
-            try {
-                if (socket != null) {
-                    socket.close();
-                }
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-            }
-        }
-        return res;
+    void pdate(){
+        Date dt= new Date();
+        Long time= dt.getTime();
+        System.out.println(time);
     }
-
-    public void scan(){
-
-        locAddress = getLocAddrIndex();//获取本地ip前缀
-
-        if(locAddress.equals("")){
-            //Toast.makeText(ctx, "扫描失败，请检查wifi网络", Toast.LENGTH_LONG).show();
-            return ;
-        }
-      //  final Semaphore semp = new Semaphore(256);
-        for ( int i = 0; i < 256; i++) {//创建256个线程分别去ping
-
-             j = i ;
-            String current_ip2 = locAddress+ KeyMode.this.j;
-            if(current_ip2==mp)
-                continue;
-            Thread tmp=new Thread(new Runnable() {
-
-                public void run() {
-                 //   try {
-                 //       semp.acquire();
-                //    }catch (Exception e){
-
-                  //  }
-                    String p = KeyMode.this.ping + locAddress + KeyMode.this.j ;
-
-                    String current_ip = locAddress+ KeyMode.this.j;
-                    if(current_ip==mp)
-                        return;
-
-                    try {
-                        proc = run.exec(p);
-                        if(current_ip==mp)
-                            return;
-                        int result = proc.waitFor();
-                        if (result == 0) {
-                            if(current_ip!=mp) {
-                                System.out.println("连接成功" + current_ip);
-                                server=current_ip;
-                                //setdbg(server);
-                            }
-                            // 向服务器发送验证信息
-                        } else {
-
-                        }
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    } catch (InterruptedException e2) {
-                        e2.printStackTrace();
-                    } finally {
-                        proc.destroy();
-                    }
-                 //   semp.release();
-                }
-            });
-            tmp.start();
-
-        }
-
-
-
-
-    }
-    void setdbg(String s){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        dbg.setText(s);
-    }
-    String getdbg(){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        return String.valueOf(dbg.getText());
-    }
-
     @Override
     protected void onPause(){
         super.onPause();
@@ -329,30 +231,39 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 camera.setDisplayOrientation(0);
                 parameters.setRotation(0);
             }
+            //List<Size>tmp=parameters.getSupportedPictureSizes();
             //List<int[]> tmp=parameters.getSupportedPreviewFpsRange();
             //System.out.println(parameters.getSupportedPreviewFpsRange().size());
            // for(int i=1;i==1;);
+            //parameters.setPictureSize(176,144);
             parameters.setPreviewFpsRange(15000, 15000);
+
           //  parameters.setPreviewFrameRate(2);
             camera.setParameters(parameters);
-            camera.setPreviewCallback(new Camera.PreviewCallback(){
 
+            camera.setPreviewCallback(new Camera.PreviewCallback(){
                 public void onPreviewFrame(byte[] data, Camera camera) {
+
+                   // pdate();
                     Size size = camera.getParameters().getPreviewSize();
                     try {
                         // 调用image.compressToJpeg（）将YUV格式图像数据data转为jpg格式
                         YuvImage image = new YuvImage(data, ImageFormat.NV21, size.width, size.height, null);
+                     //   pdate();
                         if (image != null) {
-                            ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-                            image.compressToJpeg(new Rect(0, 0, size.width, size.height), 80, outstream);
-                            outstream.flush();
+
                             // 启用线程将图像数据发送出去
-                            Thread th = new MyThread(outstream, brainip);
+                            Thread th = new MyThread( brainip,image,size);
+
+                           // pdate();
                             th.start();
+                            th.join();
                         }
                     } catch (Exception ex) {
                         Log.e("Sys", "Error:" + ex.getMessage());
                     }
+                 //   pdate();
+                 //   System.out.println("hehe");
                 }
 
             });
@@ -381,33 +292,55 @@ class MyThread extends Thread {
     private OutputStream outsocket;
     private ByteArrayOutputStream myoutputstream;
     private String ipname;
+    YuvImage image;
+    Size size;
+    public MyThread(String ipname,YuvImage ima,Size siz) {
 
-    public MyThread(ByteArrayOutputStream myoutputstream, String ipname) {
-        this.myoutputstream = myoutputstream;
         this.ipname = ipname;
+        image=ima;
+        size=siz;
+
+    }
+    void pdate(){
+        Date dt= new Date();
+        Long time= dt.getTime();
+        System.out.println(time);
+        }
+    public void run() {
+        System.out.println("habg");
+        pdate();
+        this.myoutputstream = new ByteArrayOutputStream();;
+        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 15, myoutputstream);
+        pdate();
         try {
+            myoutputstream.flush();
             myoutputstream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public void run() {
         try {
             // 将图像数据通过Socket发送出去
-            Socket tempSocket = new Socket(ipname, 6000);
+            System.out.println("ha1");
+            Socket tempSocket  = new Socket();
+            SocketAddress socAddress = new InetSocketAddress(ipname,6000);
+            tempSocket.connect(socAddress);
+            //Socket tempSocket = new Socket(ipname,6000);
             outsocket = tempSocket.getOutputStream();
             ByteArrayInputStream inputstream = new ByteArrayInputStream(myoutputstream.toByteArray());
             int amount;
             while ((amount = inputstream.read(byteBuffer)) != -1) {
                 outsocket.write(byteBuffer, 0, amount);
             }
+            System.out.println("ha2");
             myoutputstream.flush();
             myoutputstream.close();
             tempSocket.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+        pdate();
+        System.out.println("haed");
+
     }
 
 }

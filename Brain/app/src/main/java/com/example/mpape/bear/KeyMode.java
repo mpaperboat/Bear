@@ -38,6 +38,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.UUID;
@@ -216,6 +217,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         //activepohoto=1;
         ims=new Semaphore(1);
         try {
+            ss.close();
+        }catch (Exception e){
+
+        }
+        try {
             ss = new ServerSocket(6000);
         }catch (Exception e){
 
@@ -223,34 +229,45 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         new Thread(new Runnable(){
             public void run() {
                 while(true) {
-                    if(activepohoto==1)
-                    try {
+                    if(activepohoto==1){
+                        System.out.println("begin\n");
+                        try {
+                            pdate();
+                            Socket s = ss.accept();
+                            pdate();
+                            //System.out.println("连接成功!");
+                            ins = s.getInputStream();
+                            pdate();
+                            //ims.acquire();
 
-                        Socket s = ss.accept();
-                        System.out.println("连接成功!");
-                        ins = s.getInputStream();
-                        //ims.acquire();
-                       image = InputStream2Bitmap(ins);
-                       // System.out.print("haha"+image.getBounds().toString());
-                        //ims.release();
+                            image=InputStream2Bitmap(ins);
+                            System.out.println(image.getByteCount());
+                            pdate();
+                           // System.out.print("haha"+image.getBounds().toString());
+                            //ims.release();
 
-                        ins.close();
-                        //ss.close();
-
-                    }catch (Exception e){
-                        e.printStackTrace();
+                            //ins.close();
+                            //s.close();
+                            //ss.close();
+                            pdate();
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                        System.out.println("end\n");
                     }
                 }
             }
 
         }).start();
     }
+    int pht=0;
     private Handler mHandler;
     private int hahap=0;
         private ServerSocket ss;
        private Bitmap image;
        private InputStream ins;
     private Handler dh2=null;
+
     public Drawable bitmap2Drawable(Bitmap bitmap) {
                 BitmapDrawable bd = new BitmapDrawable(bitmap);
                Drawable d = (Drawable) bd;
@@ -265,7 +282,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 Bitmap bitmap = this.InputStream2Bitmap(is);
         return this.bitmap2Drawable(bitmap);
          }
-
+    void pdate(){
+        Date dt= new Date();
+        Long time= dt.getTime();
+        System.out.println(time);
+    }
     public void lettherebewifi(){
         Message msg = new Message();
         //给message对象赋值
@@ -351,12 +372,22 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         super.onPause();
         activepohoto=0;
         surfaceview.setVisibility(View.GONE);
+        try {
+            ss.close();
+        }catch (Exception e){
+
+        }
     }
     @Override
     protected void onResume(){
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
         activepohoto=1;
+        try {
+            ss = new ServerSocket(6000);
+        }catch (Exception e){
+
+        }
     }
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
@@ -385,12 +416,16 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         new Thread(new Runnable(){
             public void run() {
                 while(true) {
+                    try{wait(100);}catch (Exception e){}
                     if(activepohoto==1&&image!=null){
                         Canvas c=surfaceholder.lockCanvas();
                         if(c!=null){
                             synchronized (surfaceholder) {
+                               // try{ims.acquire();}catch (Exception e){}
                                 c.drawBitmap(image, 0, 0, new Paint());
+                                //ims.release();
                             }
+                            //pdate();
                             surfaceholder.unlockCanvasAndPost(c);
                         }
                     }
