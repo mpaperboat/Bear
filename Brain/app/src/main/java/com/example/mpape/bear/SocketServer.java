@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -34,15 +35,15 @@ public class SocketServer extends Thread {
 		Socket socket = null;
 		ByteArrayOutputStream byteArray = null;
 		try {
-			mServer = new ServerSocket(8888);
 			while (!Thread.currentThread().isInterrupted()) {
 				if (byteArray != null)
 					byteArray.reset();
 				else
 					byteArray = new ByteArrayOutputStream();
 
-				socket = mServer.accept();
-				System.out.println("new socket");
+				socket = new Socket();
+				socket.connect(new InetSocketAddress("192.168.43.1", 8888), 10000); // hard-code server address
+
 				
 				inputStream = new BufferedInputStream(socket.getInputStream());
 				outputStream = new BufferedOutputStream(socket.getOutputStream());
@@ -106,7 +107,7 @@ public class SocketServer extends Thread {
 				}
 			}
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
@@ -130,7 +131,7 @@ public class SocketServer extends Thread {
 					byteArray.close();
 				}
 				
-			} catch (IOException e) {
+			} catch (Exception e) {
 
 			}
 

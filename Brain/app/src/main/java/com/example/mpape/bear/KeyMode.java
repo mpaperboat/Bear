@@ -68,45 +68,34 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
             }
         });
         Button button2 = (Button) findViewById(R.id.button2);
-        button2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    checkblue();
-                    if(getdbg()=="Bluetooth On")
-                        return;
-                    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-                    Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-                    if (pairedDevices.size() != 1) {
-                        System.out.print(pairedDevices.size());
-                        throw new Exception("haha");
-                    }
+        new Thread(new Runnable(){
+            public void run() {
+                while(true) {
+                    try {
+                        Thread.sleep(1000);
+                        if (getdbg() == "Bluetooth On")
+                            return;
+                        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+                        Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
+                        if (pairedDevices.size() != 1) {
+                            System.out.print(pairedDevices.size());
+                            throw new Exception("haha");
+                        }
 
-                    mmDevice = pairedDevices.iterator().next();
-                    uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-                    mmSocket.connect();
-                    mmOutputStream = mmSocket.getOutputStream();
-                    setdbg("Bluetooth On");
-                } catch (Exception e) {
-                    setdbg("Bluetooth Error");
+                        mmDevice = pairedDevices.iterator().next();
+                        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+                        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+                        mmSocket.connect();
+                        mmOutputStream = mmSocket.getOutputStream();
+                    } catch (Exception e) {
+                    }
                 }
             }
-        });
-        Button button8 = (Button) findViewById(R.id.button8);
-        button8.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                    new Thread(new Runnable(){
-                        public void run() {
-                           lettherebewifi();
-                        }
-                    }).start();
-            }
-        });
+        }).start();
         final ImageButton ibutton = (ImageButton) findViewById(R.id.button6);
         ibutton.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("W");
@@ -123,7 +112,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         ibutton2.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
+
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("S");
@@ -139,7 +128,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         ibutton3.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
+
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("A");
@@ -155,7 +144,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         ibutton4.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
+
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("D");
@@ -177,10 +166,10 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 // 更新UI
                 switch (msg.what) {
                     case 1:
-                        setdbg2("WiFi On");
+
                         break;
                     case 0:
-                        setdbg2("WiFi Error");
+
                         break;
                 }
 
@@ -240,19 +229,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         }
         return ipaddress;
     }
-    void  checkblue(){
-        if(!sendData("-")){
-            setdbg("Bluetooth Error");
-        }
-    }
-    void setdbg(String s){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        dbg.setText(s);
-    }
-    void setdbg2(String s){
-        TextView dbg=(TextView)findViewById(R.id.textView3);
-        dbg.setText(s);
-    }
     String getdbg(){
         TextView dbg=(TextView)findViewById(R.id.textView);
         return String.valueOf(dbg.getText());
@@ -300,9 +276,9 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
             mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
             mmSocket.connect();
             mmOutputStream = mmSocket.getOutputStream();
-            setdbg("Bluetooth On");
+
         }catch (Exception e){
-            setdbg("Bluetooth Error");
+
         }
         activepohoto=1;
         new Thread(new Runnable(){

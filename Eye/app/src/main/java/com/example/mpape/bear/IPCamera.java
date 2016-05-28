@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,39 +27,17 @@ public class IPCamera extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams. FLAG_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.main);
-
-		mButton = (Button) findViewById(R.id.button_capture);
-		mIP="192.168.43.216";
-		mButton.setOnClickListener(
-		    new View.OnClickListener() {
-		        @Override
-		        public void onClick(View v) {
-		            // get an image from the camera
-		          if (mIsOn) {
-		        	  if (mIP == null) {
-		        		  mThread = new SocketClient(mPreview);
-		        	  }
-		        	  else {
-		        		  mThread = new SocketClient(mPreview, mIP, mPort);
-		        	  }
-
-		              mIsOn = false;
-		              mButton.setText(R.string.stop);
-		          }
-		          else {
-		              closeSocketClient();
-		              reset();
-		          }
-		        }
-		    }
-		);
 		mCameraManager = new CameraManager(this);
         // Create our Preview view and set it as the content of our activity.
         mPreview = new CameraPreview(this, mCameraManager.getCamera());
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mPreview);
+        mThread = new SocketClient(mPreview);
 	}
 
 	@Override

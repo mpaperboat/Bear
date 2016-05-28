@@ -4,6 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import android.util.Log;
 
@@ -15,6 +16,7 @@ import com.google.gson.JsonParser;
 
 public class SocketClient extends Thread {
     private Socket mSocket;
+    private ServerSocket mServer;
     private CameraPreview mCameraPreview;
     private static final String TAG = "socket";
     private String mIP = "192.168.123.1";
@@ -35,75 +37,82 @@ public class SocketClient extends Thread {
     @Override
     public void run() {
         // TODO Auto-generated method stub
+
         super.run();
-
         try {
-            mSocket = new Socket();
-            mSocket.connect(new InetSocketAddress(mIP, mPort), 10000); // hard-code server address
-            BufferedOutputStream outputStream = new BufferedOutputStream(mSocket.getOutputStream());
-            BufferedInputStream inputStream = new BufferedInputStream(mSocket.getInputStream());
+            //Thread.sleep(1000);
+            mServer = new ServerSocket(8888);
+        }catch (Exception e){
 
-            JsonObject jsonObj = new JsonObject();
-            jsonObj.addProperty("type", "data");
-            jsonObj.addProperty("length", mCameraPreview.getPreviewLength());
-            jsonObj.addProperty("width", mCameraPreview.getPreviewWidth());
-            jsonObj.addProperty("height", mCameraPreview.getPreviewHeight());
+        }
+        while(true) {
+            try {
 
-            byte[] buff = new byte[256];
-            int len = 0;
-            String msg = null;
-            outputStream.write(jsonObj.toString().getBytes());
-            outputStream.flush();
 
-            while ((len = inputStream.read(buff)) != -1) {
-                msg = new String(buff, 0, len);
+                Thread.sleep(1000);
+                mSocket=mServer.accept();
+                if (mSocket == null)
+                    continue;
+                System.out.println("new socket");
 
-                // JSON analysis
-                JsonParser parser = new JsonParser();
-                boolean isJSON = true;
-                JsonElement element = null;
-                try {
-                    element =  parser.parse(msg);
-                }
-                catch (JsonParseException e) {
-                    Log.e(TAG, "exception: " + e);
-                    isJSON = false;
-                }
-                if (isJSON && element != null) {
-                    JsonObject obj = element.getAsJsonObject();
-                    element = obj.get("state");
-                    if (element != null && element.getAsString().equals("ok")) {
-                        // send data
-                        while (true) {
-                            outputStream.write(mCameraPreview.getImageBuffer());
-                            outputStream.flush();
+                BufferedOutputStream outputStream = new BufferedOutputStream(mSocket.getOutputStream());
+                BufferedInputStream inputStream = new BufferedInputStream(mSocket.getInputStream());
+                JsonObject jsonObj = new JsonObject();
+                jsonObj.addProperty("type", "data");
+                jsonObj.addProperty("length", mCameraPreview.getPreviewLength());
+                jsonObj.addProperty("width", mCameraPreview.getPreviewWidth());
+                jsonObj.addProperty("height", mCameraPreview.getPreviewHeight());
+                byte[] buff = new byte[256];
+                int len = 0;
+                String msg = null;
+                outputStream.write(jsonObj.toString().getBytes());
+                outputStream.flush();
+                while ((len = inputStream.read(buff)) != -1) {
+                    msg = new String(buff, 0, len);
+                    JsonParser parser = new JsonParser();
+                    boolean isJSON = true;
+                    JsonElement element = null;
+                    try {
+                        element = parser.parse(msg);
+                    } catch (JsonParseException e) {
+                        Log.e(TAG, "exception: " + e);
+                        isJSON = false;
+                    }
+                    if (isJSON && element != null) {
+                        JsonObject obj = element.getAsJsonObject();
+                        element = obj.get("state");
+                        if (element != null && element.getAsString().equals("ok")) {
+                            // send data
+                            while (true) {
+                                outputStream.write(mCameraPreview.getImageBuffer());
+                                outputStream.flush();
 
-                            if (Thread.currentThread().isInterrupted())
-                                break;
+                                if (Thread.currentThread().isInterrupted())
+                                    break;
+                            }
+
+                            break;
                         }
-
+                    } else {
                         break;
                     }
                 }
-                else {
-                    break;
-                }
-            }
+                outputStream.close();
+                inputStream.close();
 
-            outputStream.close();
-            inputStream.close();
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-//			e.printStackTrace();
-            Log.e(TAG, e.toString());
-        }
-        finally {
-            try {
-                mSocket.close();
-                mSocket = null;
-            } catch (IOException e) {
+
+            } catch (Exception e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+//			e.printStackTrace();
+                Log.e(TAG, e.toString());
+            } finally {
+                try {
+                    mSocket.close();
+                    mSocket = null;
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
         }
     }
