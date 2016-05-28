@@ -2,10 +2,15 @@ package com.example.mpape.bear;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.util.Log;
 
 import com.example.mpape.bear.CameraPreview;
@@ -33,6 +38,16 @@ public class SocketClient extends Thread {
         mCameraPreview = preview;
         start();
     }
+
+    public static byte[] intToBytes2(int value)
+    {
+           byte[] src = new byte[4];
+            src[0] = (byte) ((value>>24) & 0xFF);
+           src[1] = (byte) ((value>>16)& 0xFF);
+            src[2] = (byte) ((value>>8)&0xFF);
+        src[3] = (byte) (value & 0xFF);
+           return src;
+        }
 
     @Override
     public void run() {
@@ -87,8 +102,16 @@ public class SocketClient extends Thread {
                             // send data
                             while (true) {
                                 System.out.println("ydf:wt 666");
-                                outputStream.write(mCameraPreview.getImageBuffer());
-                                System.out.println("ydf:wt 888");
+                                //outputStream.write("233".getBytes());
+                                YuvImage image = new YuvImage(mCameraPreview.getImageBuffer(), ImageFormat.NV21, mCameraPreview.getPreviewWidth(), mCameraPreview.getPreviewHeight(), null);
+                                ByteArrayOutputStream myoutputstream = new ByteArrayOutputStream();
+                                image.compressToJpeg(new Rect(0, 0, mCameraPreview.getPreviewWidth(), mCameraPreview.getPreviewHeight()), 60, myoutputstream);
+                                myoutputstream.flush();
+                                myoutputstream.close();
+                                byte tmp[]=myoutputstream.toByteArray();
+                                outputStream.write(intToBytes2(tmp.length));
+                                outputStream.write(tmp);
+                                System.out.println("cxy: send"+tmp.length+":"+tmp[0]+tmp[500]+tmp[5000]+tmp[tmp.length-5000]);
                                 outputStream.flush();
                                 System.out.println("ydf:wt 2");
                                 if (Thread.currentThread().isInterrupted()) {

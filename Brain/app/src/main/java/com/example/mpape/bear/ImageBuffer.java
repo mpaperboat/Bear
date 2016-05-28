@@ -6,7 +6,7 @@ import java.util.LinkedList;
 public class ImageBuffer{
 
     private int mTotalLength = 0;
-    private final int mFrameLength;
+    public int mFrameLength;
     private ByteArrayOutputStream mByteArrayOutputStream;
     
     public ImageBuffer(int frameLength, int width, int height) {

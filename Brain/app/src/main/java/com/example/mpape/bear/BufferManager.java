@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.provider.Settings;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,7 +22,7 @@ public class BufferManager extends Thread {
     private int mRemained = 0;
     private static final int MAX_BUFFER_COUNT = 2;
     private int mWidth, mHeight;
-    private LinkedList<byte[]> mYUVQueue = new LinkedList<byte[]>();
+    public LinkedList<byte[]> mYUVQueue = new LinkedList<byte[]>();
     private DataListener mListener;
     
     public BufferManager(int frameLength, int width, int height) {
@@ -34,7 +35,15 @@ public class BufferManager extends Thread {
             mBufferQueue[i] = new ImageBuffer(mFrameLength, width, height);
         }
     }
-    
+	public static int bytesToInt2(byte[] src, int offset) {
+		    int value;
+		  value = (int) ( ((src[offset] & 0xFF)<<24)
+		           |((src[offset+1] & 0xFF)<<16)
+		          |((src[offset+2] & 0xFF)<<8)
+		          |(src[offset+3] & 0xFF));
+		    return value;
+	}
+
 	public void fillBuffer(byte[] data, int len) {
 		mFillCount = mFillCount % MAX_BUFFER_COUNT;
 		if (mRemained != 0) {
@@ -56,11 +65,15 @@ public class BufferManager extends Thread {
 				mRemained = mRemained - len;
 			}
 		} else {
-			mBufferQueue[mFillCount].fillBuffer(data, 0, len, mYUVQueue);
+			int len2=bytesToInt2(data,0);
+			mBufferQueue[mFillCount].mFrameLength=len2;
+			mBufferQueue[mFillCount].fillBuffer(data, 4, len, mYUVQueue);
 
 			if (len < mFrameLength) {
 				mRemained = mFrameLength - len;
+				System.out.print("hell2\n");
 			} else {
+				System.out.print("hell\n");
 				++mFillCount;
 				if (mFillCount == MAX_BUFFER_COUNT)
 				    mFillCount = 0;
@@ -94,22 +107,14 @@ public class BufferManager extends Thread {
     			data = mYUVQueue.poll();
     			
     			if (data != null) {
-    				long t = System.currentTimeMillis();
     				Bitmap bufferedImage = null;
-					YuvImage image = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
-					ByteArrayOutputStream myoutputstream = new ByteArrayOutputStream();
-					image.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 100, myoutputstream);
-					try {
-						myoutputstream.flush();
-						myoutputstream.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					byte tmp[]=myoutputstream.toByteArray();
+
+					byte tmp[]=data;
+					System.out.println("cxy:push"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
 					bufferedImage= BitmapFactory.decodeByteArray(tmp,0,tmp.length);
 
                     mListener.onDirty(bufferedImage);
-                    System.out.println("time cost = " + (System.currentTimeMillis() - t));
+                    //System.out.println("time cost = " + (System.currentTimeMillis() - t));
     			}
     			
     		}
