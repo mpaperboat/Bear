@@ -87,7 +87,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 startActivity(intent);
             }
         });
-        MyImageView ps = (MyImageView) findViewById(R.id.imageView2);
         context = this;
         surfaceview = (SurfaceView)findViewById(R.id.surfaceView);
         surfaceholder = surfaceview.getHolder();

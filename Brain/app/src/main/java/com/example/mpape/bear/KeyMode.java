@@ -26,7 +26,6 @@ import android.hardware.Camera;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,8 +43,6 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
-//import java.util.logging.Handler;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -53,7 +50,6 @@ import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
-
 
 public class KeyMode extends Activity implements SurfaceHolder.Callback {
     private static Context context = null;
@@ -69,7 +65,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
     private int bconnected;
     private int activepohoto;
     private Semaphore ims;
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
         activepohoto=0;
         super.onCreate(savedInstanceState);
@@ -114,15 +109,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
         Button button8 = (Button) findViewById(R.id.button8);
         button8.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-
                     new Thread(new Runnable(){
                         public void run() {
                            lettherebewifi();
                         }
-
                     }).start();
-
-
             }
         });
         final ImageButton ibutton = (ImageButton) findViewById(R.id.button6);
@@ -215,17 +206,14 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
             }
 
         }).start();
-        //activepohoto=1;
         ims=new Semaphore(1);
         try {
             ss.close();
         }catch (Exception e){
-
         }
         try {
             ss = new ServerSocket(6000);
         }catch (Exception e){
-
         }
         new Thread(new Runnable(){
             public void run() {
@@ -239,17 +227,9 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                             System.out.println("连接成功!");
                             ins = s.getInputStream();
                             pdate();
-                            //ims.acquire();
-
                             image=InputStream2Bitmap(ins);
                             System.out.println(image.getByteCount());
                             pdate();
-                           // System.out.print("haha"+image.getBounds().toString());
-                            //ims.release();
-
-                            //ins.close();
-                            //s.close();
-                            //ss.close();
                             pdate();
                         }catch (Exception e){
                             e.printStackTrace();
@@ -264,25 +244,22 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
     int pht=0;
     private Handler mHandler;
     private int hahap=0;
-        private ServerSocket ss;
-       private Bitmap image;
-       private InputStream ins;
+    private ServerSocket ss;
+    private Bitmap image;
+    private InputStream ins;
     private Handler dh2=null;
-
     public Drawable bitmap2Drawable(Bitmap bitmap) {
-                BitmapDrawable bd = new BitmapDrawable(bitmap);
-               Drawable d = (Drawable) bd;
-                return d;
-            }
-
+        BitmapDrawable bd = new BitmapDrawable(bitmap);
+        Drawable d = (Drawable) bd;
+        return d;
+    }
     public Bitmap InputStream2Bitmap(InputStream is) {
-                return BitmapFactory.decodeStream(is);
-            }
-
+        return BitmapFactory.decodeStream(is);
+    }
     public Drawable InputStream2Drawable(InputStream is) {
-                Bitmap bitmap = this.InputStream2Bitmap(is);
+        Bitmap bitmap = this.InputStream2Bitmap(is);
         return this.bitmap2Drawable(bitmap);
-         }
+    }
     void pdate(){
         Date dt= new Date();
         Long time= dt.getTime();
@@ -290,13 +267,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
     }
     public void lettherebewifi(){
         Message msg = new Message();
-        //给message对象赋值
-
-        //发送message值给Handler接收
-
-
         try {
-
             Socket socket = new Socket("192.168.43.1", 8888);
             PrintWriter pw = new PrintWriter(socket.getOutputStream());
             pw.write(getLocAddress() + "\n");
@@ -307,22 +278,16 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
             mHandler.sendMessage(msg);
         } catch (Exception e) {
             msg.what = 0;
-
             mHandler.sendMessage(msg);
         }
     }
     public String getLocAddress(){
-
         String ipaddress = "";
-
-        try {
+        try{
             Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces();
-            // 遍历所用的网络接口
             while (en.hasMoreElements()) {
                 NetworkInterface networks = en.nextElement();
-                // 得到每一个网络接口绑定的所有ip
                 Enumeration<InetAddress> address = networks.getInetAddresses();
-                // 遍历每一个接口绑定的所有ip
                 while (address.hasMoreElements()) {
                     InetAddress ip = address.nextElement();
                     if (!ip.isLoopbackAddress()
@@ -331,15 +296,10 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                     }
                 }
             }
-        } catch (SocketException e) {
-            Log.e("", "获取本地ip地址失败");
+        }catch (SocketException e) {
             e.printStackTrace();
         }
-
-        //System.out.println("本机IP:" + ipaddress);
-
         return ipaddress;
-
     }
     void  checkblue(){
         if(!sendData("-")){
@@ -390,14 +350,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
 
         }
     }
-    @Override
-    public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
-        System.out.println("surfacechanged");
-    }
-    @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        System.out.println("surfacecreated");
-
         try {
             mBTAdapter = BluetoothAdapter.getDefaultAdapter();
             Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
@@ -437,10 +390,9 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
 
         }).start();
     }
-    @Override
+    public void surfaceChanged(SurfaceHolder holder,int a,int b,int c){
+    }
     public void surfaceDestroyed(SurfaceHolder arg0) {
-        System.out.println("surfaceDestroyed");
-
         try {
             mmSocket.close();
         }catch (Exception e){

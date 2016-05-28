@@ -25,12 +25,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".GravityMode"
-            android:screenOrientation="landscape"/>
-        <activity
-            android:name=".PhotoMode"
-            android:screenOrientation="landscape"></activity>
     </application>
 
 </manifest>

@@ -8,18 +8,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.widget.ImageView;
-import android.content.Intent;
-import android.graphics.Matrix;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 public class MyImageView extends ImageView {
     public double offset;
@@ -39,13 +27,6 @@ public class MyImageView extends ImageView {
     public MyImageView(Context c,AttributeSet a,int d){
         super(c,a,d);
         init();
-    }
-    void setLoc(int x,int y){
-//        int a=1;
-//        while(a!=2){
-//            a=3;
-//        }
-//        this.setFrame(this.getLeft()+x,this.getTop()+y,this.getRight()+x,this.getBottom()+y);
     }
     @Override
     protected void onDraw(Canvas can){
