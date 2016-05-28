@@ -6,30 +6,21 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.media.Image;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.app.Activity;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.hardware.Camera;
-import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import java.io.BufferedReader;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Inet4Address;
@@ -40,31 +31,27 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.PixelFormat;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 
-public class KeyMode extends Activity implements SurfaceHolder.Callback {
-    private static Context context = null;
+public class KeyMode extends Activity implements SurfaceHolder.Callback,DataListener{
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
-    private Camera camera = null;
     private BluetoothAdapter mBTAdapter;
     private BluetoothSocket mmSocket;
     private BluetoothDevice mmDevice;
     private OutputStream mmOutputStream;
-    private InputStream mmInputStream;
+    Bitmap mImage, mLastFrame;
     private UUID uuid;
-    private int bconnected;
     private int activepohoto;
-    private Semaphore ims;
+    private LinkedList<Bitmap> mQueue = new LinkedList<Bitmap>();
+    private static final int MAX_BUFFER = 15;
     protected void onCreate(Bundle savedInstanceState) {
         activepohoto=0;
         super.onCreate(savedInstanceState);
@@ -99,7 +86,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                     mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
                     mmSocket.connect();
                     mmOutputStream = mmSocket.getOutputStream();
-                    mmInputStream = mmSocket.getInputStream();
                     setdbg("Bluetooth On");
                 } catch (Exception e) {
                     setdbg("Bluetooth Error");
@@ -182,7 +168,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 return false;
             }
         });
-        context = this;
         surfaceview = (SurfaceView)findViewById(R.id.surfaceView);
         surfaceholder = surfaceview.getHolder();
         surfaceholder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -200,66 +185,20 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 }
 
             }};
-        new Thread(new Runnable(){
-            public void run() {
-                lettherebewifi();
-            }
-
-        }).start();
-        ims=new Semaphore(1);
-        try {
-            ss.close();
-        }catch (Exception e){
-        }
-        try {
-            ss = new ServerSocket(6000);
-        }catch (Exception e){
-        }
-        new Thread(new Runnable(){
-            public void run() {
-                while(true) {
-                    if(activepohoto==1){
-                        System.out.println("begin\n");
-                        try {
-                            pdate();
-                            Socket s = ss.accept();
-                            pdate();
-                            System.out.println("连接成功!");
-                            ins = s.getInputStream();
-                            pdate();
-                            image=InputStream2Bitmap(ins);
-                            System.out.println(image.getByteCount());
-                            pdate();
-                            pdate();
-                        }catch (Exception e){
-                            e.printStackTrace();
-                        }
-                        System.out.println("end\n");
-                    }
-                }
-            }
-
-        }).start();
+        SocketServer server = new SocketServer();
+        server.setOnDataListener(this);
+        server.start();
     }
-    int pht=0;
+
     private Handler mHandler;
-    private int hahap=0;
     private ServerSocket ss;
     private Bitmap image;
     private InputStream ins;
-    private Handler dh2=null;
-    public Drawable bitmap2Drawable(Bitmap bitmap) {
-        BitmapDrawable bd = new BitmapDrawable(bitmap);
-        Drawable d = (Drawable) bd;
-        return d;
-    }
+
     public Bitmap InputStream2Bitmap(InputStream is) {
         return BitmapFactory.decodeStream(is);
     }
-    public Drawable InputStream2Drawable(InputStream is) {
-        Bitmap bitmap = this.InputStream2Bitmap(is);
-        return this.bitmap2Drawable(bitmap);
-    }
+
     void pdate(){
         Date dt= new Date();
         Long time= dt.getTime();
@@ -361,7 +300,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
             mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
             mmSocket.connect();
             mmOutputStream = mmSocket.getOutputStream();
-            mmInputStream = mmSocket.getInputStream();
             setdbg("Bluetooth On");
         }catch (Exception e){
             setdbg("Bluetooth Error");
@@ -372,18 +310,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
                 while(true) {
                     try{wait(100);}catch (Exception e){}
                     if(activepohoto==1&&image!=null){
-                        Canvas c=surfaceholder.lockCanvas();
-                        if(c!=null){
-                            synchronized (surfaceholder) {
-                               // try{ims.acquire();}catch (Exception e){}
-                                Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
-                                c.drawBitmap(image,null,tmp,new Paint());
-                                //c.drawBitmap(image, 0, 0, new Paint());
-                                //ims.release();
-                            }
 
-                            surfaceholder.unlockCanvasAndPost(c);
-                        }
                     }
                 }
             }
@@ -397,6 +324,55 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback {
             mmSocket.close();
         }catch (Exception e){
 
+        }
+    }
+    @Override
+    public void onDirty(Bitmap bufferedImage) {
+        // TODO Auto-generated method stub
+        updateUI(bufferedImage);
+    }
+    private void updateUI(Bitmap bufferedImage) {
+
+        synchronized (mQueue) {
+            if (mQueue.size() ==  MAX_BUFFER) {
+                mLastFrame = mQueue.poll();
+            }
+            mQueue.add(bufferedImage);
+        }
+
+        repaint();
+    }
+    public void repaint() {
+        synchronized (mQueue) {
+            if (mQueue.size() > 0) {
+                mLastFrame = mQueue.poll();
+            }
+        }
+        if (mLastFrame != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(mLastFrame,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mLastFrame, 0, 0, null);
+        }
+        else if (mImage != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(mImage,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mImage, 0, 0, null);
         }
     }
 }
