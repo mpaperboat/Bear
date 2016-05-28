@@ -98,7 +98,7 @@ public class BufferManager extends Thread {
     				Bitmap bufferedImage = null;
 					YuvImage image = new YuvImage(data, ImageFormat.NV21, mWidth, mHeight, null);
 					ByteArrayOutputStream myoutputstream = new ByteArrayOutputStream();
-					image.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 70, myoutputstream);
+					image.compressToJpeg(new Rect(0, 0, mWidth, mHeight), 100, myoutputstream);
 					try {
 						myoutputstream.flush();
 						myoutputstream.close();

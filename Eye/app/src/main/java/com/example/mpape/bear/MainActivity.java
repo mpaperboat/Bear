@@ -15,7 +15,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-public class IPCamera extends Activity {
+public class MainActivity extends Activity {
     private CameraPreview mPreview;
     private CameraManager mCameraManager;
     private boolean mIsOn = true;
@@ -39,55 +39,6 @@ public class IPCamera extends Activity {
         preview.addView(mPreview);
         mThread = new SocketClient(mPreview);
 	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.ipcamera, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// TODO Auto-generated method stub
-		int id = item.getItemId();
-		switch (id) {
-		case R.id.action_settings:
-			setting();
-			break;
-		}
-
-		return super.onOptionsItemSelected(item);
-	}
-
-	private void setting() {
-		LayoutInflater factory = LayoutInflater.from(this);
-        final View textEntryView = factory.inflate(R.layout.server_setting, null);
-        AlertDialog dialog =  new AlertDialog.Builder(IPCamera.this)
-            .setIconAttribute(android.R.attr.alertDialogIcon)
-            .setTitle(R.string.setting_title)
-            .setView(textEntryView)
-            .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-
-                	EditText ipEdit = (EditText)textEntryView.findViewById(R.id.ip_edit);
-                	EditText portEdit = (EditText)textEntryView.findViewById(R.id.port_edit);
-                	mIP = ipEdit.getText().toString();
-                	mPort = Integer.parseInt(portEdit.getText().toString());
-
-                	Toast.makeText(IPCamera.this, "New address: " + mIP + ":" + mPort, Toast.LENGTH_LONG).show();
-                }
-            })
-            .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-
-                    /* User clicked cancel so do some stuff */
-                }
-            })
-            .create();
-        dialog.show();
-	}
-
 	@Override
     protected void onPause() {
         super.onPause();

@@ -51,7 +51,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
         params.setPictureSize(176,144);
         List<Size>haha=params.getSupportedPreviewSizes();
-        params.setPreviewSize(480,320);
+        params.setPreviewSize(320,240);
         params.setPreviewFpsRange(15000, 15000);
         mCamera.setParameters(params);
         
@@ -154,39 +154,4 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         	}
         }
     };
-    
-    private void saveYUV(byte[] byteArray) {
-
-        YuvImage im = new YuvImage(byteArray, ImageFormat.NV21, mPreviewSize.width, mPreviewSize.height, null);
-        Rect r = new Rect(0, 0, mPreviewSize.width, mPreviewSize.height);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        im.compressToJpeg(r, 100, baos);
-
-        try {
-            FileOutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory() + "/yuv.jpg");
-            output.write(baos.toByteArray());
-            output.flush();
-            output.close();
-        } catch (FileNotFoundException e) {
-        } catch (IOException e) {
-        }
-    }
-    
-    private void saveRAW(byte[] byteArray) {
-        try {
-            FileOutputStream file = new FileOutputStream(new File(Environment.getExternalStorageDirectory() + "/test.yuv"));
-            try {
-                file.write(mImageData);
-                file.flush();
-                file.close();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
 }
