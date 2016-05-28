@@ -40,10 +40,10 @@ public class SocketServer extends Thread {
 					byteArray.reset();
 				else
 					byteArray = new ByteArrayOutputStream();
-
+				System.out.println("ydf:wt 1");
 				socket = new Socket();
 				socket.connect(new InetSocketAddress("192.168.43.1", 8888), 10000); // hard-code server address
-
+				System.out.println("ydf:wt 2");
 				
 				inputStream = new BufferedInputStream(socket.getInputStream());
 				outputStream = new BufferedOutputStream(socket.getOutputStream());
@@ -54,7 +54,7 @@ public class SocketServer extends Thread {
 				String msg = null;
 				// read msg
 				while ((len = inputStream.read(buff)) != -1) {
-					
+					System.out.println("ydf:wt 3");
 					msg = new String(buff, 0, len);
 					// JSON analysis
 	                JsonParser parser = new JsonParser();
@@ -81,6 +81,7 @@ public class SocketServer extends Thread {
 	                        imageBuff = new byte[length];
                             mBufferManager = new BufferManager(length, width, height);
                             mBufferManager.setOnDataListener(mDataListener);
+							System.out.println("ydf:wt 4");
                             break;
 	                    }
 	                }

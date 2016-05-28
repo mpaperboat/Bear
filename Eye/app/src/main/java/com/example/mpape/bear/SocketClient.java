@@ -50,10 +50,11 @@ public class SocketClient extends Thread {
 
 
                 Thread.sleep(1000);
+                System.out.println("ydf:waiting");
                 mSocket=mServer.accept();
                 if (mSocket == null)
                     continue;
-                System.out.println("new socket");
+                System.out.println("ydf:new socket");
 
                 BufferedOutputStream outputStream = new BufferedOutputStream(mSocket.getOutputStream());
                 BufferedInputStream inputStream = new BufferedInputStream(mSocket.getInputStream());
@@ -67,6 +68,7 @@ public class SocketClient extends Thread {
                 String msg = null;
                 outputStream.write(jsonObj.toString().getBytes());
                 outputStream.flush();
+                System.out.println("ydf:wt 1");
                 while ((len = inputStream.read(buff)) != -1) {
                     msg = new String(buff, 0, len);
                     JsonParser parser = new JsonParser();
@@ -86,9 +88,11 @@ public class SocketClient extends Thread {
                             while (true) {
                                 outputStream.write(mCameraPreview.getImageBuffer());
                                 outputStream.flush();
-
-                                if (Thread.currentThread().isInterrupted())
+                                System.out.println("ydf:wt 2");
+                                if (Thread.currentThread().isInterrupted()) {
+                                    System.out.println("ydf:wt 3");
                                     break;
+                                }
                             }
 
                             break;
@@ -102,10 +106,12 @@ public class SocketClient extends Thread {
 
 
             } catch (Exception e) {
+                System.out.println("ydf:wt 4");
                 // TODO Auto-generated catch block
 //			e.printStackTrace();
                 Log.e(TAG, e.toString());
             } finally {
+                System.out.println("ydf:wt 5");
                 try {
                     mSocket.close();
                     mSocket = null;

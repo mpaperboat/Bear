@@ -73,8 +73,8 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 while(true) {
                     try {
                         Thread.sleep(1000);
-                        if (getdbg() == "Bluetooth On")
-                            return;
+                        if(sendData("-"))
+                            continue;
                         mBTAdapter = BluetoothAdapter.getDefaultAdapter();
                         Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
                         if (pairedDevices.size() != 1) {
@@ -229,10 +229,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         }
         return ipaddress;
     }
-    String getdbg(){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        return String.valueOf(dbg.getText());
-    }
     boolean sendData(String m){
         try{
             String msg = m;
@@ -281,17 +277,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
 
         }
         activepohoto=1;
-        new Thread(new Runnable(){
-            public void run() {
-                while(true) {
-                    try{wait(100);}catch (Exception e){}
-                    if(activepohoto==1&&image!=null){
-
-                    }
-                }
-            }
-
-        }).start();
     }
     public void surfaceChanged(SurfaceHolder holder,int a,int b,int c){
     }
