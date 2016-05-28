@@ -67,24 +67,26 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 startActivity(intent);
             }
         });
+        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+        Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
+        mmDevice = pairedDevices.iterator().next();
+        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+        try {
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+        }
+        catch (Exception e){
+
+        }
         Button button2 = (Button) findViewById(R.id.button2);
         new Thread(new Runnable(){
             public void run() {
                 while(true) {
                     try {
                         Thread.sleep(1000);
+                        if(activepohoto<2)
+                            continue;
                         if(sendData("-"))
                             continue;
-                        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-                        Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-                        if (pairedDevices.size() != 1) {
-                            System.out.print(pairedDevices.size());
-                            throw new Exception("haha");
-                        }
-
-                        mmDevice = pairedDevices.iterator().next();
-                        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-                        mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
                         mmSocket.connect();
                         mmOutputStream = mmSocket.getOutputStream();
                     } catch (Exception e) {
@@ -262,20 +264,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         }
     }
     public void surfaceCreated(SurfaceHolder holder) {
-        try {
-            mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-            Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-            if(pairedDevices.size()!=1)
-                throw new Exception("haha");
-            mmDevice=pairedDevices.iterator().next();
-            uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
 
-        }catch (Exception e){
-
-        }
         activepohoto=1;
     }
     public void surfaceChanged(SurfaceHolder holder,int a,int b,int c){

@@ -86,13 +86,16 @@ public class SocketClient extends Thread {
                         if (element != null && element.getAsString().equals("ok")) {
                             // send data
                             while (true) {
+                                System.out.println("ydf:wt 666");
                                 outputStream.write(mCameraPreview.getImageBuffer());
+                                System.out.println("ydf:wt 888");
                                 outputStream.flush();
                                 System.out.println("ydf:wt 2");
                                 if (Thread.currentThread().isInterrupted()) {
                                     System.out.println("ydf:wt 3");
                                     break;
                                 }
+                                System.out.println("ydf:wt 777");
                             }
 
                             break;

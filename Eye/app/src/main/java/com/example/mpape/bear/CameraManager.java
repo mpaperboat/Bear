@@ -34,9 +34,6 @@ public class CameraManager {
 		if (mCamera == null) {
 			mCamera = getCameraInstance();
 		}
-		
-		Toast.makeText(mContext, "preview size = " + mCamera.getParameters().getPreviewSize().width + 
-				", " + mCamera.getParameters().getPreviewSize().height, Toast.LENGTH_LONG).show(); 
 	}
 	
 	/** A safe way to get an instance of the Camera object. */
