@@ -45,16 +45,14 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     private SurfaceHolder surfaceholder;
     private BluetoothAdapter mBTAdapter;
     private BluetoothSocket mmSocket;
-    private BluetoothDevice eyeDevice,carDevice;
+    private BluetoothDevice mmDevice;
     private OutputStream mmOutputStream;
     Bitmap mImage, mLastFrame;
     private UUID uuid;
     private int activepohoto;
     private LinkedList<Bitmap> mQueue = new LinkedList<Bitmap>();
-    private static final int MAX_BUFFER = 5;
-    final String SPP_UUID = "00001101-0000-1000-8000-00805F9B34FB";
+    private static final int MAX_BUFFER = 15;
     protected void onCreate(Bundle savedInstanceState) {
-        uuid = UUID.fromString(SPP_UUID);
         activepohoto=0;
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -71,34 +69,29 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         });
         mBTAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            // Loop through paired devices
-            for (BluetoothDevice device : pairedDevices) {
-                // Add the name and address to an array adapter to show in a ListView
-                //System.out.println(device.getAddress());
-                if(device.getAddress().equals("98:D3:32:30:56:13"))
-                    carDevice=device;
-                else
-                    eyeDevice=device;
-            }
+        if(pairedDevices.size()!=0)
+            mmDevice = pairedDevices.iterator().next();
+        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
+        try {
+            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+        }
+        catch (Exception e){
+
         }
         Button button2 = (Button) findViewById(R.id.button2);
         new Thread(new Runnable(){
             public void run() {
                 while(true) {
                     try {
-                        //if(activepohoto<2)
-                         //   continue;
+                        Thread.sleep(1000);
+                        if(activepohoto<2)
+                            continue;
                         if(sendData("-"))
                             continue;
-                        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-                        mmSocket = carDevice.createRfcommSocketToServiceRecord(uuid);
                         mmSocket.connect();
                         mmOutputStream = mmSocket.getOutputStream();
-                        Thread.sleep(10000);
                     } catch (Exception e) {
                     }
-                    //return;
                 }
             }
         }).start();
@@ -184,7 +177,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 }
 
             }};
-        SocketServer server = new SocketServer(eyeDevice);
+        SocketServer server = new SocketServer();
         server.setOnDataListener(this);
         server.start();
     }
