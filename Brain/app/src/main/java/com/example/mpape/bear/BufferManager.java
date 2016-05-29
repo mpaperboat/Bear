@@ -110,7 +110,7 @@ public class BufferManager extends Thread {
     				Bitmap bufferedImage = null;
 
 					byte tmp[]=data;
-					System.out.println("cxy:push"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
+					System.out.println("cxy:push"+tmp.length+":"+tmp[0]+tmp[500]+tmp[600]+tmp[tmp.length-1]);
 					bufferedImage= BitmapFactory.decodeByteArray(tmp,0,tmp.length);
 
                     mListener.onDirty(bufferedImage);

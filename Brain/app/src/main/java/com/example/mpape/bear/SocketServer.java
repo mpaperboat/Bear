@@ -1,5 +1,10 @@
 package com.example.mpape.bear;
 
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.sql.Array;
+import java.util.UUID;
 
 import com.example.mpape.bear.BufferManager;
 import com.example.mpape.bear.DataListener;
@@ -18,12 +24,12 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 public class SocketServer extends Thread {
-	private ServerSocket mServer;
+	private BluetoothServerSocket mServer;
 	private DataListener mDataListener;
 	private BufferManager mBufferManager;
-
-	public SocketServer() {
-	    
+	private BluetoothDevice eyeDevice;
+	public SocketServer(BluetoothDevice eyeDevic) {
+		eyeDevice=eyeDevic;
 	}
 	public static int bytesToInt2(byte[] src, int offset) {
 		int value;
@@ -41,7 +47,7 @@ public class SocketServer extends Thread {
 		System.out.println("server's waiting");
 		BufferedInputStream inputStream = null;
 		BufferedOutputStream outputStream = null;
-		Socket socket = null;
+		BluetoothSocket socket = null;
 		ByteArrayOutputStream byteArray = null;
 		try {
 			while (!Thread.currentThread().isInterrupted()) {
@@ -49,11 +55,10 @@ public class SocketServer extends Thread {
 					byteArray.reset();
 				else
 					byteArray = new ByteArrayOutputStream();
-				System.out.println("ydf:wt 1");
-				socket = new Socket();
-				socket.connect(new InetSocketAddress("192.168.43.1", 8888), 10000); // hard-code server address
-				System.out.println("ydf:wt 2");
-				
+
+				socket=eyeDevice.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+				socket.connect();
+
 				inputStream = new BufferedInputStream(socket.getInputStream());
 				outputStream = new BufferedOutputStream(socket.getOutputStream());
 				
@@ -118,7 +123,7 @@ public class SocketServer extends Thread {
 							int t=inputStream.read(tmp,cur,le1n-cur);
 							cur=cur+t;
 						}
-						System.out.println("cxy:reci"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
+						System.out.println("cxy:reci"+tmp.length+":"+tmp[0]+tmp[500]+tmp[600]+tmp[tmp.length-1]);
 						mBufferManager.mYUVQueue.add(tmp);
                         if(mBufferManager.mYUVQueue.size()>1)
                             mBufferManager.mYUVQueue.poll();
