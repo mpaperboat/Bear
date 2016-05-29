@@ -7,13 +7,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.UUID;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-
-import android.bluetooth.BluetoothSocket;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -26,13 +20,13 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 public class SocketClient extends Thread {
-    private BluetoothSocket mSocket;
-    private BluetoothServerSocket mServer;
+    private Socket mSocket;
+    private ServerSocket mServer;
     private CameraPreview mCameraPreview;
     private static final String TAG = "socket";
     private String mIP = "192.168.123.1";
-    private BluetoothAdapter mBTAdapter;
     private int mPort = 8888;
+
     public SocketClient(CameraPreview preview, String ip, int port) {
         mCameraPreview = preview;
         mIP = ip;
@@ -60,11 +54,9 @@ public class SocketClient extends Thread {
         // TODO Auto-generated method stub
 
         super.run();
-
-        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
         try {
             //Thread.sleep(1000);
-            mServer = mBTAdapter.listenUsingRfcommWithServiceRecord("test", UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+            mServer = new ServerSocket(8888);
         }catch (Exception e){
 
         }
@@ -72,7 +64,7 @@ public class SocketClient extends Thread {
             try {
 
 
-                //Thread.sleep(1000);
+                Thread.sleep(1000);
                 System.out.println("ydf:waiting");
                 mSocket=mServer.accept();
                 if (mSocket == null)
@@ -113,14 +105,13 @@ public class SocketClient extends Thread {
                                 //outputStream.write("233".getBytes());
                                 YuvImage image = new YuvImage(mCameraPreview.getImageBuffer(), ImageFormat.NV21, mCameraPreview.getPreviewWidth(), mCameraPreview.getPreviewHeight(), null);
                                 ByteArrayOutputStream myoutputstream = new ByteArrayOutputStream();
-                                image.compressToJpeg(new Rect(0, 0, mCameraPreview.getPreviewWidth(), mCameraPreview.getPreviewHeight()), 40, myoutputstream);
+                                image.compressToJpeg(new Rect(0, 0, mCameraPreview.getPreviewWidth(), mCameraPreview.getPreviewHeight()), 60, myoutputstream);
                                 myoutputstream.flush();
                                 myoutputstream.close();
                                 byte tmp[]=myoutputstream.toByteArray();
                                 outputStream.write(intToBytes2(tmp.length));
-                                outputStream.flush();
                                 outputStream.write(tmp);
-                                System.out.println("cxy: send"+tmp.length+":"+tmp[0]+tmp[500]+tmp[600]+tmp[tmp.length-1]);
+                                System.out.println("cxy: send"+tmp.length+":"+tmp[0]+tmp[500]+tmp[5000]+tmp[tmp.length-5000]);
                                 outputStream.flush();
                                 System.out.println("ydf:wt 2");
                                 if (Thread.currentThread().isInterrupted()) {
