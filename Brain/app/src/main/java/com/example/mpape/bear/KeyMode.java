@@ -44,10 +44,9 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
     private BluetoothAdapter mBTAdapter;
-    private BluetoothSocket mmSocket;
     private BluetoothDevice mmDevice;
-    private OutputStream mmOutputStream;
-    Bitmap mImage, mLastFrame;
+
+
     private UUID uuid;
     private int activepohoto;
     private LinkedList<Bitmap> mQueue = new LinkedList<Bitmap>();
@@ -73,23 +72,22 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
             mmDevice = pairedDevices.iterator().next();
         uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
         try {
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
+            ((MyApplication)getApplication()).mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
         }
         catch (Exception e){
 
         }
-        Button button2 = (Button) findViewById(R.id.button2);
         new Thread(new Runnable(){
             public void run() {
                 while(true) {
                     try {
-                        Thread.sleep(1000);
-                        if(activepohoto<2)
-                            continue;
+                        Thread.sleep(100);
+                        //if(activepohoto<2)
+                          //  continue;
                         if(sendData("-"))
                             continue;
-                        mmSocket.connect();
-                        mmOutputStream = mmSocket.getOutputStream();
+                        ((MyApplication)getApplication()).mmSocket.connect();
+                        ((MyApplication)getApplication()).mmOutputStream = ((MyApplication)getApplication()).mmSocket.getOutputStream();
                     } catch (Exception e) {
                     }
                 }
@@ -177,11 +175,11 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 }
 
             }};
-        SocketServer server = new SocketServer();
+        server = new SocketServer();
         server.setOnDataListener(this);
-        server.start();
+        //411server.start();
     }
-
+    SocketServer server;
     private Handler mHandler;
     private ServerSocket ss;
     private Bitmap image;
@@ -235,7 +233,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     boolean sendData(String m){
         try{
             String msg = m;
-            mmOutputStream.write(msg.getBytes());
+            ((MyApplication)getApplication()).mmOutputStream.write(msg.getBytes());
             System.out.println("Data Sent");
             return true;
         }catch (Exception e){
@@ -252,6 +250,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         }catch (Exception e){
 
         }
+        //server.interrupt();
     }
     @Override
     protected void onResume(){
@@ -263,6 +262,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         }catch (Exception e){
 
         }
+        server.start();
     }
     public void surfaceCreated(SurfaceHolder holder) {
 
@@ -271,11 +271,6 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     public void surfaceChanged(SurfaceHolder holder,int a,int b,int c){
     }
     public void surfaceDestroyed(SurfaceHolder arg0) {
-        try {
-            mmSocket.close();
-        }catch (Exception e){
-
-        }
     }
     @Override
     public void onDirty(Bitmap bufferedImage) {
@@ -286,7 +281,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
 
         synchronized (mQueue) {
             if (mQueue.size() ==  MAX_BUFFER) {
-                mLastFrame = mQueue.poll();
+                ((MyApplication)getApplication()).mLastFrame = mQueue.poll();
             }
             mQueue.add(bufferedImage);
         }
@@ -296,15 +291,15 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     public void repaint() {
         synchronized (mQueue) {
             if (mQueue.size() > 0) {
-                mLastFrame = mQueue.poll();
+                ((MyApplication)getApplication()).mLastFrame = mQueue.poll();
             }
         }
-        if (mLastFrame != null) {
+        if (((MyApplication)getApplication()).mLastFrame != null) {
             Canvas c=surfaceholder.lockCanvas();
             if(c!=null){
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
-                    c.drawBitmap(mLastFrame,null,tmp,new Paint());
+                    c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
                     // System.out.println("draw one img!");
                     // pdate();
                 }
@@ -312,12 +307,12 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
             }
             //g.drawImage(mLastFrame, 0, 0, null);
         }
-        else if (mImage != null) {
+        else if (((MyApplication)getApplication()).mImage != null) {
             Canvas c=surfaceholder.lockCanvas();
             if(c!=null){
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
-                    c.drawBitmap(mImage,null,tmp,new Paint());
+                    c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
                     // System.out.println("draw one img!");
                     // pdate();
                 }

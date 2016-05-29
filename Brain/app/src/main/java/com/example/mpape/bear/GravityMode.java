@@ -4,7 +4,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -59,11 +62,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
     private Camera camera = null;
-    private BluetoothAdapter mBTAdapter;
-    private BluetoothSocket mmSocket;
-    private BluetoothDevice mmDevice;
-    private OutputStream mmOutputStream;
-    private InputStream mmInputStream;
     private UUID uuid;
     private int bconnected;
     private int statu;
@@ -92,33 +90,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         surfaceholder = surfaceview.getHolder();
         surfaceholder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceholder.addCallback(this);
-        Button button2 = (Button) findViewById(R.id.button2);
-        button2.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                try {
-                    checkblue();
-                    if(getdbg()=="Bluetooth On")
-                        return;
-                    mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-                    Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-                    if (pairedDevices.size() != 1) {
-                        System.out.print(pairedDevices.size());
-                        throw new Exception("haha");
-                    }
-
-                    mmDevice = pairedDevices.iterator().next();
-                    uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-                    mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-                    mmSocket.connect();
-                    mmOutputStream = mmSocket.getOutputStream();
-                    mmInputStream = mmSocket.getInputStream();
-                    setdbg("Bluetooth On");
-                    statu=0;
-                } catch (Exception e) {
-                    setdbg("Bluetooth Error");
-                }
-            }
-        });
         final ImageButton ibutton = (ImageButton) findViewById(R.id.button6);
         ibutton.setOnTouchListener(new View.OnTouchListener(){
             @Override
@@ -126,7 +97,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 checkblue();
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
-                        if(discheck())
                         sendData("W");
                         System.out.print("w pressed");
                         return true;
@@ -153,6 +123,45 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 return false;
             }
         });
+        new Thread(new Runnable(){
+            public void run() {
+                while(true) {
+                    try {
+                        Thread.sleep(100);
+                        repaint();
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }).start();
+    }
+    public void repaint() {
+        if (((MyApplication)getApplication()).mLastFrame != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mLastFrame, 0, 0, null);
+        }
+        else if (((MyApplication)getApplication()).mImage != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mImage, 0, 0, null);
+        }
     }
     void  checkblue(){
         if(!sendData("-")){
@@ -170,7 +179,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     boolean sendData(String m){
         try{
             String msg = m;
-            mmOutputStream.write(msg.getBytes());
+            ((MyApplication)getApplication()).mmOutputStream.write(msg.getBytes());
            // System.out.println("Data Sent");
             return true;
         }catch (Exception e){
@@ -220,32 +229,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
             ps.invalidate();
         }
     }
-    boolean discheck(){
-        try{
-        sendData("C");
-        byte[] buff=new byte[10];
-            buff[0]='*';
-        for(int i=1;i<=100;++i){
-            if(mmInputStream.read(buff)!=0)
-                break;
-        }
-        if(buff[0]=='*'){
-            return false;
-        }
-         int t=0;
-            for(int i=0;buff[i]!=13&&buff[i]!=10;++i){
-                t=t*10+(buff[i]-'0');
-            }
-            Log.i(TAG,String.valueOf(t));
-            if(t<15)
-                return false;
-            return true;
-        }
-        catch (Exception e){
-
-        }
-        return true;
-    }
     @Override
     protected void onPause(){
         super.onPause();
@@ -293,22 +276,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
             camera.release();
             System.out.println("camera.release");
         }
-        try {
-            mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-            Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-            if(pairedDevices.size()!=1)
-                throw new Exception("haha");
-            mmDevice=pairedDevices.iterator().next();
-            uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-            mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-            mmSocket.connect();
-            mmOutputStream = mmSocket.getOutputStream();
-            mmInputStream = mmSocket.getInputStream();
-            setdbg("Bluetooth On");
-            statu=0;
-        }catch (Exception e){
-            setdbg("Bluetooth Error");
-        }
+
     }
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
@@ -316,11 +284,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         if (camera != null) {
             camera.stopPreview();
             camera.release();
-        }
-        try {
-            mmSocket.close();
-        }catch (Exception e){
-
         }
     }
 }

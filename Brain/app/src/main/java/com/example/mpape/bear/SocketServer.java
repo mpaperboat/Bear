@@ -1,17 +1,14 @@
 package com.example.mpape.bear;
 
+import android.graphics.BitmapFactory;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.sql.Array;
 
-import com.example.mpape.bear.BufferManager;
-import com.example.mpape.bear.DataListener;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -20,7 +17,6 @@ import com.google.gson.JsonParser;
 public class SocketServer extends Thread {
 	private ServerSocket mServer;
 	private DataListener mDataListener;
-	private BufferManager mBufferManager;
 
 	public SocketServer() {
 	    
@@ -62,7 +58,7 @@ public class SocketServer extends Thread {
 				int len = 0;
 				String msg = null;
 				// read msg
-				while ((len = inputStream.read(buff)) != -1) {
+				while (!Thread.currentThread().isInterrupted()&&(len = inputStream.read(buff)) != -1) {
 					System.out.println("ydf:wt 3");
 					msg = new String(buff, 0, len);
 					// JSON analysis
@@ -88,8 +84,6 @@ public class SocketServer extends Thread {
 	                        int height = element.getAsInt();
 	                        
 	                        tmp = new byte[length];
-                            mBufferManager = new BufferManager(length, width, height);
-                            mBufferManager.setOnDataListener(mDataListener);
 
                             break;
 	                    }
@@ -106,7 +100,7 @@ public class SocketServer extends Thread {
 		            outputStream.write(jsonObj.toString().getBytes());
 		            outputStream.flush();
 
-					while(true){
+					while(!Thread.currentThread().isInterrupted()){
                         tmp=new byte[4];
                         for(int i=0;i<4;++i) {
                             while(inputStream.read(tmp, i, 1)!=1);
@@ -119,9 +113,10 @@ public class SocketServer extends Thread {
 							cur=cur+t;
 						}
 						System.out.println("cxy:reci"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
-						mBufferManager.mYUVQueue.add(tmp);
-                        if(mBufferManager.mYUVQueue.size()>1)
-                            mBufferManager.mYUVQueue.poll();
+						//mBufferManager.mYUVQueue.add(tmp);
+                        //if(mBufferManager.mYUVQueue.size()>1)
+                           // mBufferManager.mYUVQueue.poll();
+						mDataListener.onDirty( BitmapFactory.decodeByteArray(tmp,0,tmp.length));
 					}
 
 
@@ -130,10 +125,7 @@ public class SocketServer extends Thread {
 	                   // mBufferManager.fillBuffer(imageBuff, len);
 	               // }
 				}
-				
-				if (mBufferManager != null) {
-					mBufferManager.close();
-				}
+
 			}
 
 		} catch (Exception e) {
@@ -165,6 +157,7 @@ public class SocketServer extends Thread {
 			}
 
 		}
+		System.out.println("lalalalalshit");
 
 	}
 
