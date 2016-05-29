@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.sql.Array;
 
 import com.example.mpape.bear.BufferManager;
 import com.example.mpape.bear.DataListener;
@@ -25,14 +23,7 @@ public class SocketServer extends Thread {
 	public SocketServer() {
 	    
 	}
-	public static int bytesToInt2(byte[] src, int offset) {
-		int value;
-		value = (int) ( ((src[offset] & 0xFF)<<24)
-				|((src[offset+1] & 0xFF)<<16)
-				|((src[offset+2] & 0xFF)<<8)
-				|(src[offset+3] & 0xFF));
-		return value;
-	}
+
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
@@ -58,7 +49,7 @@ public class SocketServer extends Thread {
 				outputStream = new BufferedOutputStream(socket.getOutputStream());
 				
 				byte[] buff = new byte[256];
-				byte[] tmp = null;
+				byte[] imageBuff = null;
 				int len = 0;
 				String msg = null;
 				// read msg
@@ -87,10 +78,10 @@ public class SocketServer extends Thread {
 	                        element = obj.get("height");
 	                        int height = element.getAsInt();
 	                        
-	                        tmp = new byte[length];
+	                        imageBuff = new byte[length];
                             mBufferManager = new BufferManager(length, width, height);
                             mBufferManager.setOnDataListener(mDataListener);
-
+							System.out.println("ydf:wt 4");
                             break;
 	                    }
 	                }
@@ -100,35 +91,16 @@ public class SocketServer extends Thread {
 	                }
 				}
 				
-				if (tmp != null) {
+				if (imageBuff != null) {
 				    JsonObject jsonObj = new JsonObject();
 		            jsonObj.addProperty("state", "ok");
 		            outputStream.write(jsonObj.toString().getBytes());
 		            outputStream.flush();
-
-					while(true){
-                        tmp=new byte[4];
-                        for(int i=0;i<4;++i) {
-                            while(inputStream.read(tmp, i, 1)!=1);
-                        }
-						int le1n=bytesToInt2(tmp,0);
-						tmp=new byte[le1n];
-						int cur=0;
-						while(cur<le1n){
-							int t=inputStream.read(tmp,cur,le1n-cur);
-							cur=cur+t;
-						}
-						System.out.println("cxy:reci"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
-						mBufferManager.mYUVQueue.add(tmp);
-                        if(mBufferManager.mYUVQueue.size()>1)
-                            mBufferManager.mYUVQueue.poll();
-					}
-
-
+		            
 		            // read image data
-				    //while ((len = inputStream.read(imageBuff)) != -1) {
-	                   // mBufferManager.fillBuffer(imageBuff, len);
-	               // }
+				    while ((len = inputStream.read(imageBuff)) != -1) {
+	                    mBufferManager.fillBuffer(imageBuff, len);
+	                }
 				}
 				
 				if (mBufferManager != null) {
