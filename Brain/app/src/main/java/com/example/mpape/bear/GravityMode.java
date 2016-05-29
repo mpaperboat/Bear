@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -54,7 +55,7 @@ import java.util.UUID;
 
 import android.widget.Toast;
 
-public class GravityMode extends Activity implements SensorEventListener,SurfaceHolder.Callback {
+public class GravityMode extends Activity implements SensorEventListener,SurfaceHolder.Callback,DataListener {
     private SensorManager mSensorManager;
     private Sensor mSensor;
     private static final String TAG="TestTag";
@@ -65,6 +66,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     private UUID uuid;
     private int bconnected;
     private int statu;
+    private int on=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,7 +83,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(GravityMode.this,PhotoMode.class);
+                intent.setClass(GravityMode.this,KeyMode.class);
                 startActivity(intent);
             }
         });
@@ -94,7 +96,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         ibutton.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("W");
@@ -111,7 +112,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         ibutton2.setOnTouchListener(new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent e){
-                checkblue();
                 switch(e.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         sendData("S");
@@ -123,50 +123,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 return false;
             }
         });
-        new Thread(new Runnable(){
-            public void run() {
-                while(true) {
-                    try {
-                        Thread.sleep(100);
-                        repaint();
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        }).start();
-    }
-    public void repaint() {
-        if (((MyApplication)getApplication()).mLastFrame != null) {
-            Canvas c=surfaceholder.lockCanvas();
-            if(c!=null){
-                synchronized (surfaceholder) {
-                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
-                    c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
-                }
-                surfaceholder.unlockCanvasAndPost(c);
-            }
-            //g.drawImage(mLastFrame, 0, 0, null);
-        }
-        else if (((MyApplication)getApplication()).mImage != null) {
-            Canvas c=surfaceholder.lockCanvas();
-            if(c!=null){
-                synchronized (surfaceholder) {
-                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
-                    c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
-                }
-                surfaceholder.unlockCanvasAndPost(c);
-            }
-            //g.drawImage(mImage, 0, 0, null);
-        }
-    }
-    void  checkblue(){
-        if(!sendData("-")){
-            setdbg("Bluetooth Error");
-        }
     }
     void setdbg(String s){
         TextView dbg=(TextView)findViewById(R.id.textView);
@@ -190,6 +146,8 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
 
     }
     public void onSensorChanged(SensorEvent event) {
+        if(on==0)
+            return;
         if (event.sensor == null) {
             return;
         }
@@ -233,6 +191,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     protected void onPause(){
         super.onPause();
         surfaceview.setVisibility(View.GONE);
+        on=0;
         //surfaceview.d
         // camera.release();
     }
@@ -240,6 +199,8 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     protected void onResume(){
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
+        ((MyApplication)getApplication()).server.setOnDataListener(this);
+        on=1;
         // camera.release();
     }
     @Override
@@ -249,41 +210,58 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         System.out.println("surfacecreated");
-        //获取camera对象
-        camera = Camera.open();
-        try {
-            //设置预览监听
-            camera.setPreviewDisplay(holder);
-            Camera.Parameters parameters = camera.getParameters();
-
-            if (this.getResources().getConfiguration().orientation
-                    != Configuration.ORIENTATION_LANDSCAPE) {
-                parameters.set("orientation", "portrait");
-                camera.setDisplayOrientation(90);
-                parameters.setRotation(90);
-            } else {
-                parameters.set("orientation", "landscape");
-                camera.setDisplayOrientation(0);
-                parameters.setRotation(0);
-            }
-            camera.setParameters(parameters);
-            //启动摄像头预览
-            camera.startPreview();
-            System.out.println("camera.startpreview");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            camera.release();
-            System.out.println("camera.release");
-        }
+        //获取camera对
 
     }
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
-        System.out.println("surfaceDestroyed");
-        if (camera != null) {
-            camera.stopPreview();
-            camera.release();
+    }
+    public void onDirty(Bitmap bufferedImage) {
+        // TODO Auto-generated method stub
+        updateUI(bufferedImage);
+    }
+    private void updateUI(Bitmap bufferedImage) {
+
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() ==  ((MyApplication)getApplication()).MAX_BUFFER) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
+            }
+            ((MyApplication)getApplication()).mQueue.add(bufferedImage);
+        }
+
+        repaint();
+    }
+    public void repaint() {
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() > 0) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
+            }
+        }
+        if (((MyApplication)getApplication()).mLastFrame != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mLastFrame, 0, 0, null);
+        }
+        else if (((MyApplication)getApplication()).mImage != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mImage, 0, 0, null);
         }
     }
 }

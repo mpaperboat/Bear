@@ -43,15 +43,9 @@ import android.os.Handler;
 public class KeyMode extends Activity implements SurfaceHolder.Callback,DataListener{
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
-    private BluetoothAdapter mBTAdapter;
-    private BluetoothDevice mmDevice;
-
-
-    private UUID uuid;
     private int activepohoto;
-    private LinkedList<Bitmap> mQueue = new LinkedList<Bitmap>();
-    private static final int MAX_BUFFER = 15;
     protected void onCreate(Bundle savedInstanceState) {
+        System.out.print("hell\n");
         activepohoto=0;
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -66,33 +60,7 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 startActivity(intent);
             }
         });
-        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-        Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-        if(pairedDevices.size()!=0)
-            mmDevice = pairedDevices.iterator().next();
-        uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
-        try {
-            ((MyApplication)getApplication()).mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
-        }
-        catch (Exception e){
 
-        }
-        new Thread(new Runnable(){
-            public void run() {
-                while(true) {
-                    try {
-                        Thread.sleep(100);
-                        //if(activepohoto<2)
-                          //  continue;
-                        if(sendData("-"))
-                            continue;
-                        ((MyApplication)getApplication()).mmSocket.connect();
-                        ((MyApplication)getApplication()).mmOutputStream = ((MyApplication)getApplication()).mmSocket.getOutputStream();
-                    } catch (Exception e) {
-                    }
-                }
-            }
-        }).start();
         final ImageButton ibutton = (ImageButton) findViewById(R.id.button6);
         ibutton.setOnTouchListener(new View.OnTouchListener(){
             @Override
@@ -175,11 +143,8 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                 }
 
             }};
-        server = new SocketServer();
-        server.setOnDataListener(this);
-        //411server.start();
     }
-    SocketServer server;
+
     private Handler mHandler;
     private ServerSocket ss;
     private Bitmap image;
@@ -256,13 +221,9 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     protected void onResume(){
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
-        activepohoto=1;
-        try {
-            ss = new ServerSocket(6000);
-        }catch (Exception e){
 
-        }
-        server.start();
+        ((MyApplication)getApplication()).server.setOnDataListener(this);
+        //server.start();
     }
     public void surfaceCreated(SurfaceHolder holder) {
 
@@ -279,19 +240,19 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
     }
     private void updateUI(Bitmap bufferedImage) {
 
-        synchronized (mQueue) {
-            if (mQueue.size() ==  MAX_BUFFER) {
-                ((MyApplication)getApplication()).mLastFrame = mQueue.poll();
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() ==  ((MyApplication)getApplication()).MAX_BUFFER) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
             }
-            mQueue.add(bufferedImage);
+            ((MyApplication)getApplication()).mQueue.add(bufferedImage);
         }
 
         repaint();
     }
     public void repaint() {
-        synchronized (mQueue) {
-            if (mQueue.size() > 0) {
-                ((MyApplication)getApplication()).mLastFrame = mQueue.poll();
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() > 0) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
             }
         }
         if (((MyApplication)getApplication()).mLastFrame != null) {
