@@ -69,7 +69,8 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
         });
         mBTAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = mBTAdapter.getBondedDevices();
-        mmDevice = pairedDevices.iterator().next();
+        if(pairedDevices.size()!=0)
+            mmDevice = pairedDevices.iterator().next();
         uuid = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
         try {
             mmSocket = mmDevice.createRfcommSocketToServiceRecord(uuid);
