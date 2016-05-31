@@ -83,7 +83,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(GravityMode.this,KeyMode.class);
+                intent.setClass(GravityMode.this,GestureMode.class);
                 startActivity(intent);
             }
         });
@@ -121,6 +121,14 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                         return true;
                 }
                 return false;
+            }
+        });
+        final ImageButton ibutton5 = (ImageButton) findViewById(R.id.button5);
+        ibutton5.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ((MyApplication)getApplication()).phts.addFirst(((MyApplication)getApplication()).mLastFrame);
+                Toast.makeText(getApplicationContext(), "Photo Taken",
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -193,6 +201,7 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         surfaceview.setVisibility(View.GONE);
         on=0;
         //surfaceview.d
+        sendData("Q");
         // camera.release();
     }
     @Override

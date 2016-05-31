@@ -81,6 +81,7 @@
 
         <ImageButton
             style="?android:attr/buttonStyleSmall"
+            android:focusableInTouchMode="true"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:text="前"
@@ -114,6 +115,21 @@
             android:layout_above="@+id/button6"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
+
+        <CheckBox
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:textAllCaps="false"
+            android:text="       Light"
+            android:id="@+id/button2"
+            android:background="@drawable/lee2"
+            android:button="@null"
+            android:textColor="#ffffff"
+            android:layout_below="@+id/button"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginTop="20dp"
+            android:checked="false" />
 
     </RelativeLayout>
 </RelativeLayout>

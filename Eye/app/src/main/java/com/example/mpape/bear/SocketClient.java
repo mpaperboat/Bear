@@ -60,7 +60,7 @@ public class SocketClient extends Thread {
         }catch (Exception e){
 
         }
-        while(true) {
+        while(!Thread.currentThread().isInterrupted()) {
             try {
 
 
@@ -84,7 +84,7 @@ public class SocketClient extends Thread {
                 outputStream.write(jsonObj.toString().getBytes());
                 outputStream.flush();
                 System.out.println("ydf:wt 1");
-                while ((len = inputStream.read(buff)) != -1) {
+                while (!Thread.currentThread().isInterrupted()&&(len = inputStream.read(buff)) != -1) {
                     msg = new String(buff, 0, len);
                     JsonParser parser = new JsonParser();
                     boolean isJSON = true;

@@ -30,6 +30,9 @@
             android:name=".GravityMode"
             android:screenOrientation="landscape"/>
         <activity
+            android:name=".GestureMode"
+            android:screenOrientation="landscape"/>
+        <activity
             android:name=".PhotoMode"
             android:screenOrientation="landscape"></activity>
     </application>

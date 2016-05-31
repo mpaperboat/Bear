@@ -17,14 +17,13 @@
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"
-        android:id="@+id/root"
-        tools:context="com.example.martin.test3c4.gravitymode">
+        tools:context="com.example.martin.test3c4.keymode">
 
         <Button
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:textAllCaps="false"
-            android:text="Gravity"
+            android:text="Gesture"
             android:id="@+id/button"
             android:layout_alignParentTop="true"
             android:layout_alignParentLeft="true"
@@ -35,6 +34,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="40dp"
+            android:text=" "
             android:id="@+id/textView"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
@@ -50,7 +50,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:background="@drawable/down3"
-            android:contentDescription="122" android:keepScreenOn="true"
+            android:contentDescription="122"
+            android:visibility="invisible"
             />
 
 
@@ -59,13 +60,13 @@
             android:layout_height="80dp"
             android:text="右"
             android:id="@+id/button4"
+            android:visibility="invisible"
             android:layout_alignTop="@+id/textView2"
             android:layout_alignRight="@+id/textView"
             android:layout_alignEnd="@+id/textView"
             android:layout_marginTop="42dp"
-
-            android:contentDescription="122"
-            android:alpha="0" />
+            android:background="@drawable/right3"
+            android:contentDescription="122" />
 
         <ImageButton
             android:layout_width="80dp"
@@ -76,13 +77,16 @@
             android:layout_toLeftOf="@+id/button4"
             android:layout_toStartOf="@+id/button4"
             android:background="@drawable/tk3"
-            android:contentDescription="122" />
+            android:contentDescription="122"
+            android:keepScreenOn="true"/>
 
         <ImageButton
             style="?android:attr/buttonStyleSmall"
+            android:focusableInTouchMode="true"
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:text="前"
+            android:visibility="invisible"
             android:id="@+id/button6"
             android:layout_marginBottom="40dp"
             android:layout_above="@+id/button3"
@@ -103,8 +107,10 @@
             android:id="@+id/button7"
             android:layout_alignTop="@+id/button5"
             android:layout_toLeftOf="@+id/button5"
+            android:visibility="invisible"
             android:layout_toStartOf="@+id/button5"
-            android:alpha="0" />
+            android:background="@drawable/left3"/>
+
 
         <TextView
             android:layout_width="wrap_content"
@@ -113,39 +119,6 @@
             android:layout_above="@+id/button6"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
-
-        <ImageView
-            android:layout_width="200dp"
-            android:layout_height="40dp"
-            android:id="@+id/imageView"
-            android:layout_above="@+id/button3"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentTop="false"
-            android:layout_marginBottom="-5dp"
-            android:layout_alignParentEnd="false"
-            android:background="@drawable/ht" />
-        <com.example.mpape.bear.MyImageView
-            android:layout_width="200dp"
-            android:layout_height="40dp"
-            android:id="@+id/imageView2"
-            android:layout_above="@+id/button3"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentTop="false"
-            android:layout_marginBottom="-5dp"
-            android:layout_alignParentEnd="false"
-            />
-
-        <HorizontalScrollView
-            android:layout_width="400dp"
-            android:layout_height="40dp"
-            android:id="@+id/horizontalScrollView"
-            android:layout_above="@+id/button3"
-            android:layout_centerHorizontal="true"
-            android:layout_alignParentTop="false"
-            android:layout_marginBottom="-5dp"
-            android:layout_alignParentEnd="false">
-
-        </HorizontalScrollView>
 
     </RelativeLayout>
 </RelativeLayout>

@@ -8,7 +8,10 @@ import android.graphics.Bitmap;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,9 +34,11 @@ public class MyApplication extends Application{
     private BluetoothDevice mmDevice;
     private BluetoothAdapter mBTAdapter;
     private UUID uuid;
+    public LinkedList<Bitmap> phts;
     @Override
     public void onCreate() {
         // TODO Auto-generated method stub
+        phts=new LinkedList<Bitmap>();
         super.onCreate();
         System.out.println("welcome");
         mBTAdapter = BluetoothAdapter.getDefaultAdapter();

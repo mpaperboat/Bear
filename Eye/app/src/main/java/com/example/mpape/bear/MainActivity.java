@@ -26,6 +26,7 @@ public class MainActivity extends Activity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//System.out.println("hell2");
 		super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
@@ -42,10 +43,10 @@ public class MainActivity extends Activity {
 	@Override
     protected void onPause() {
         super.onPause();
-        closeSocketClient();
-        mPreview.onPause();
-        mCameraManager.onPause();              // release the camera immediately on pause event
-        reset();
+        //closeSocketClient();
+        //mPreview.onPause();
+        //mCameraManager.onPause();              // release the camera immediately on pause event
+      //  reset();
     }
 
 	private void reset() {
@@ -57,8 +58,8 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		// TODO Auto-generated method stub
 		super.onResume();
-		mCameraManager.onResume();
-		mPreview.setCamera(mCameraManager.getCamera());
+		//mCameraManager.onResume();
+		//mPreview.setCamera(mCameraManager.getCamera());
 	}
 
 	private void closeSocketClient() {

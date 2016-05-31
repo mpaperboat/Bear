@@ -1,41 +1,30 @@
 package com.example.mpape.bear;
-
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.support.v7.app.AppCompatActivity;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.GestureDetector.SimpleOnGestureListener;
 import android.widget.Button;
-import android.widget.TextView;
-import android.app.Activity;
-import android.content.Context;
-import android.content.res.Configuration;
-import android.hardware.Camera;
-import android.os.Bundle;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.Iterator;
 import java.util.ListIterator;
-
-public class PhotoMode extends Activity implements SurfaceHolder.Callback,GestureDetector.OnGestureListener {
+public class GestureMode extends Activity implements SurfaceHolder.Callback,GestureDetector.OnGestureListener,DataListener {
     private static Context context = null;
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
-    private Camera camera = null;
     private ListIterator<Bitmap> it;
     private GestureDetector mGestureDetector;
     @Override
@@ -44,7 +33,7 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
         requestWindowFeature(Window.FEATURE_NO_TITLE);//取消标题栏
         getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN ,
                 WindowManager.LayoutParams. FLAG_FULLSCREEN);//全屏
-        setContentView(R.layout.activity_photo_mode);
+        setContentView(R.layout.activity_gesture_mode);
         //mGestureDetector=new GestureDetector(this.surfaceview,this);
         mGestureDetector = new GestureDetector(this, this);
 
@@ -52,7 +41,7 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setClass(PhotoMode.this, KeyMode.class);
+                intent.setClass(GestureMode.this, PhotoMode.class);
                 startActivity(intent);
             }
         });
@@ -61,6 +50,14 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
         surfaceholder = surfaceview.getHolder();
         surfaceholder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         surfaceholder.addCallback(this);
+        final ImageButton ibutton5 = (ImageButton) findViewById(R.id.button5);
+        ibutton5.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ((MyApplication)getApplication()).phts.addFirst(((MyApplication)getApplication()).mLastFrame);
+                Toast.makeText(getApplicationContext(), "Photo Taken",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -82,11 +79,14 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
     protected void onPause() {
         super.onPause();
         surfaceview.setVisibility(View.GONE);
+        //surfaceview.d
+        sendData("Q");
     }
     @Override
     protected void onResume() {
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
+        ((MyApplication)getApplication()).server.setOnDataListener(this);
 
     }
     @Override
@@ -129,6 +129,7 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
         Log.i(getClass().getName(), "onSingleTapUp-----" + getActionName(e.getAction()));
+        sendData("Q");
         return false;
     }
 
@@ -149,29 +150,21 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         System.out.println("zkw"+(e1.getX()-e2.getX()));
         //大于设定的最小滑动距离并且在水平/竖直方向速度绝对值大于设定的最小速度，则执行相应方法
-        if(e1.getX()-e2.getX() > 20 && Math.abs(velocityX) > 10){
-            System.out.println(""+(e1.getX()-e2.getX())+","+velocityX);
-            //在此处实现跳转
-            //Intent intent  = new Intent(MainActivity.this,nextActivity.class);
-            //startActivity(intent);
+        if(e1.getX()-e2.getX() > 200 && Math.abs(velocityX) > 200){
+           sendData("A");
 
-            //Toast.makeText(this, "turn left", Toast.LENGTH_SHORT).show();
-            if(it!=null&&it.hasPrevious())
-                paint(it.previous());
-
-        }else if(e2.getX() - e1.getX() > 20 && Math.abs(velocityX) > 10){
+        }else if(e2.getX() - e1.getX() > 200 && Math.abs(velocityX) > 200){
             //Toast.makeText(this, "turn right", Toast.LENGTH_SHORT).show();
-            if(it!=null&&it.hasNext()){
-                paint(it.next());
+            sendData("D");
 
-            }
-
-        }else if(e1.getY()-e2.getY() > 20 && Math.abs(velocityY) > 10){
+        }else if(e1.getY()-e2.getY() > 200 && Math.abs(velocityY) > 200){
            // Toast.makeText(MainActivity.this, "turn up", Toast.LENGTH_SHORT).show();
+            sendData("W");
 
-
-        }else if(e2.getY()-e1.getY() > 20 && Math.abs(velocityY) > 10){
-            //Toast.makeText(MainActivity.this, "turn down", Toast.LENGTH_SHORT).show();
+        }else if(e2.getY()-e1.getY() > 200 && Math.abs(velocityY) > 200){
+            sendData("S");
+        }else{
+            sendData("Q");
         }
 
         return false;
@@ -195,5 +188,62 @@ public class PhotoMode extends Activity implements SurfaceHolder.Callback,Gestur
        // Log.d(TAG, "- onTouchEvent()");
         return true;
     }
+    public void onDirty(Bitmap bufferedImage) {
+        // TODO Auto-generated method stub
+        updateUI(bufferedImage);
+    }
+    private void updateUI(Bitmap bufferedImage) {
 
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() ==  ((MyApplication)getApplication()).MAX_BUFFER) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
+            }
+            ((MyApplication)getApplication()).mQueue.add(bufferedImage);
+        }
+
+        repaint();
+    }
+    public void repaint() {
+        synchronized (((MyApplication)getApplication()).mQueue) {
+            if (((MyApplication)getApplication()).mQueue.size() > 0) {
+                ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
+            }
+        }
+        if (((MyApplication)getApplication()).mLastFrame != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mLastFrame, 0, 0, null);
+        }
+        else if (((MyApplication)getApplication()).mImage != null) {
+            Canvas c=surfaceholder.lockCanvas();
+            if(c!=null){
+                synchronized (surfaceholder) {
+                    Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
+                    c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
+                    // System.out.println("draw one img!");
+                    // pdate();
+                }
+                surfaceholder.unlockCanvasAndPost(c);
+            }
+            //g.drawImage(mImage, 0, 0, null);
+        }
+    }
+    boolean sendData(String m){
+        try{
+            String msg = m;
+            ((MyApplication)getApplication()).mmOutputStream.write(msg.getBytes());
+            // System.out.println("Data Sent");
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
 }

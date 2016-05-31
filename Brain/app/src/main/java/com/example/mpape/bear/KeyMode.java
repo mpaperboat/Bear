@@ -13,7 +13,10 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.app.Activity;
 import android.view.SurfaceHolder;
@@ -39,6 +42,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.os.Handler;
+import android.widget.Toast;
 
 public class KeyMode extends Activity implements SurfaceHolder.Callback,DataListener{
     private SurfaceView surfaceview;
@@ -124,6 +128,23 @@ public class KeyMode extends Activity implements SurfaceHolder.Callback,DataList
                         return true;
                 }
                 return false;
+            }
+        });
+        final ImageButton ibutton5 = (ImageButton) findViewById(R.id.button5);
+        ibutton5.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ((MyApplication)getApplication()).phts.addFirst(((MyApplication)getApplication()).mLastFrame);
+                Toast.makeText(getApplicationContext(), "Photo Taken",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+        final CheckBox gray_radio = ( CheckBox) findViewById(R.id.button2);
+        gray_radio.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    Toast.makeText(getApplicationContext(), "Let There Be Light",
+                            Toast.LENGTH_SHORT).show();
+                }
             }
         });
         surfaceview = (SurfaceView)findViewById(R.id.surfaceView);
