@@ -1,60 +1,32 @@
 package com.example.mpape.bear;
-
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
-
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.*;
-import java.util.Random;
-import android.util.Log;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.hardware.Camera;
-import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.app.Activity;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Bundle;
-import android.widget.TextView;
-import java.io.IOException;
-import java.util.Set;
+import java.util.LinkedList;
 import java.util.UUID;
-
 import android.widget.Toast;
-
 public class GravityMode extends Activity implements SensorEventListener,SurfaceHolder.Callback,DataListener {
     private SensorManager mSensorManager;
     private Sensor mSensor;
@@ -62,18 +34,29 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
     private static Context context = null;
     private SurfaceView surfaceview;
     private SurfaceHolder surfaceholder;
-    private Camera camera = null;
-    private UUID uuid;
-    private int bconnected;
     private int statu;
+    LinkedList<Integer> damn;
+    Handler myHandler;
     private int on=0;
-    @Override
     protected void onCreate(Bundle savedInstanceState) {
+        myHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                int t=msg.what;
+                if(t==13){
+                    Toast.makeText(getApplicationContext(), "Found A Human",
+                            Toast.LENGTH_SHORT).show();
+                }
+                if(t==1){
+                    Toast.makeText(getApplicationContext(), "Found Something",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        damn=new LinkedList<Integer>();
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);//取消标题栏
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN ,
-                WindowManager.LayoutParams. FLAG_FULLSCREEN);//全屏
-
+                WindowManager.LayoutParams. FLAG_FULLSCREEN);
         setContentView(R.layout.activity_gravity_mode);
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -131,27 +114,25 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                         Toast.LENGTH_SHORT).show();
             }
         });
-    }
-    void setdbg(String s){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        dbg.setText(s);
-    }
-    String getdbg(){
-        TextView dbg=(TextView)findViewById(R.id.textView);
-        return String.valueOf(dbg.getText());
+        final Button gray_radio = ( Button) findViewById(R.id.button2);
+        gray_radio.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Cops Are On The Way",
+                        Toast.LENGTH_SHORT).show();
+                ((MyApplication)getApplication()).server.add(1);
+            }
+        });
     }
     boolean sendData(String m){
         try{
             String msg = m;
             ((MyApplication)getApplication()).mmOutputStream.write(msg.getBytes());
-           // System.out.println("Data Sent");
             return true;
         }catch (Exception e){
             return false;
         }
     }
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
     }
     public void onSensorChanged(SensorEvent event) {
         if(on==0)
@@ -159,7 +140,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
         if (event.sensor == null) {
             return;
         }
-
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             int x = (int) event.values[0];
             int y = (int) event.values[1];
@@ -174,7 +154,6 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
             t/=5;
             t=Math.pow(t,1.0/1);
             t=t*sign*100;
-            //Log.i(TAG,String.valueOf(t));
             ps.offset=t;
             if(t>=40){
                 if(statu!=1)
@@ -185,52 +164,36 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 sendData("A");
                 statu=-1;
             }else{
-               // sendData("A");
                 if(statu!=0) {
                     sendData("Q");
                     statu = 0;
                 }
             }
-            // Log.i(TAG,ps.offset.t));
             ps.invalidate();
         }
     }
-    @Override
     protected void onPause(){
         super.onPause();
         surfaceview.setVisibility(View.GONE);
         on=0;
-        //surfaceview.d
         sendData("Q");
-        // camera.release();
     }
-    @Override
     protected void onResume(){
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
         ((MyApplication)getApplication()).server.setOnDataListener(this);
         on=1;
-        // camera.release();
     }
-    @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
-        System.out.println("surfacechanged");
     }
-    @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        System.out.println("surfacecreated");
-        //获取camera对
-
     }
-    @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
     }
     public void onDirty(Bitmap bufferedImage) {
-        // TODO Auto-generated method stub
         updateUI(bufferedImage);
     }
     private void updateUI(Bitmap bufferedImage) {
-
         synchronized (((MyApplication)getApplication()).mQueue) {
             if (((MyApplication)getApplication()).mQueue.size() ==  ((MyApplication)getApplication()).MAX_BUFFER) {
                 ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
@@ -252,12 +215,9 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
                     c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
                 }
                 surfaceholder.unlockCanvasAndPost(c);
             }
-            //g.drawImage(mLastFrame, 0, 0, null);
         }
         else if (((MyApplication)getApplication()).mImage != null) {
             Canvas c=surfaceholder.lockCanvas();
@@ -265,12 +225,25 @@ public class GravityMode extends Activity implements SensorEventListener,Surface
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
                     c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
                 }
                 surfaceholder.unlockCanvasAndPost(c);
             }
-            //g.drawImage(mImage, 0, 0, null);
         }
+        if(damn.size()!=0){
+            int t=damn.poll();
+            if(t==13){
+                Toast.makeText(getApplicationContext(), "Found A Human",
+                        Toast.LENGTH_SHORT).show();
+            }
+            if(t==1){
+                Toast.makeText(getApplicationContext(), "Found Something",
+                        Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    public void conv(int t){
+        Message msg=new Message();
+        msg.what=t;
+        myHandler.sendMessage(msg);
     }
 }

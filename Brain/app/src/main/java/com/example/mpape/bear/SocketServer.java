@@ -1,25 +1,31 @@
 package com.example.mpape.bear;
-
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.util.LinkedList;
+import java.util.List;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-
+import com.faceplusplus.api.FaceDetecter;
+import com.faceplusplus.api.FaceDetecter.Face;
+import com.facepp.error.FaceppParseException;
+import com.facepp.http.HttpRequests;
+import com.facepp.http.PostParameters;
 public class SocketServer extends Thread {
 	private ServerSocket mServer;
-	private DataListener mDataListener;
-
+	public DataListener mDataListener;
+	public LinkedList<Integer> msgs;
+	Bitmap cu1r=null;
 	public SocketServer() {
-	    
+		msgs=new LinkedList<Integer>();
+		(new MyThread1(mDataListener,this)).start();
 	}
 	public static int bytesToInt2(byte[] src, int offset) {
 		int value;
@@ -29,11 +35,13 @@ public class SocketServer extends Thread {
 				|(src[offset+3] & 0xFF));
 		return value;
 	}
-	@Override
+	public void add(int t){
+		synchronized (msgs){
+			msgs.push(t);
+		}
+	}
 	public void run() {
-		// TODO Auto-generated method stub
 		super.run();
-
 		System.out.println("server's waiting");
 		BufferedInputStream inputStream = null;
 		BufferedOutputStream outputStream = null;
@@ -49,19 +57,15 @@ public class SocketServer extends Thread {
 				socket = new Socket();
 				socket.connect(new InetSocketAddress("192.168.43.1", 8888), 10000); // hard-code server address
 				System.out.println("ydf:wt 2");
-				
 				inputStream = new BufferedInputStream(socket.getInputStream());
 				outputStream = new BufferedOutputStream(socket.getOutputStream());
-				
 				byte[] buff = new byte[256];
 				byte[] tmp = null;
 				int len = 0;
 				String msg = null;
-				// read msg
 				while (!Thread.currentThread().isInterrupted()&&(len = inputStream.read(buff)) != -1) {
 					System.out.println("ydf:wt 3");
 					msg = new String(buff, 0, len);
-					// JSON analysis
 	                JsonParser parser = new JsonParser();
 	                boolean isJSON = true;
 	                JsonElement element = null;
@@ -82,9 +86,7 @@ public class SocketServer extends Thread {
 	                        int width = element.getAsInt();
 	                        element = obj.get("height");
 	                        int height = element.getAsInt();
-	                        
 	                        tmp = new byte[length];
-
                             break;
 	                    }
 	                }
@@ -93,14 +95,20 @@ public class SocketServer extends Thread {
 	                    break;
 	                }
 				}
-				
+				int fp=0;
 				if (tmp != null) {
 				    JsonObject jsonObj = new JsonObject();
 		            jsonObj.addProperty("state", "ok");
 		            outputStream.write(jsonObj.toString().getBytes());
 		            outputStream.flush();
-
 					while(!Thread.currentThread().isInterrupted()){
+						synchronized (msgs){
+							while(!msgs.isEmpty()){
+								int t=msgs.poll();
+								outputStream.write(t);
+								outputStream.flush();
+							}
+						}
                         tmp=new byte[4];
                         for(int i=0;i<4;++i) {
                             while(inputStream.read(tmp, i, 1)!=1);
@@ -113,23 +121,14 @@ public class SocketServer extends Thread {
 							cur=cur+t;
 						}
 						System.out.println("cxy:reci"+tmp.length+":"+tmp[0]+":"+tmp[500]+":"+tmp[5000]+":"+tmp[tmp.length-5000]);
-						//mBufferManager.mYUVQueue.add(tmp);
-                        //if(mBufferManager.mYUVQueue.size()>1)
-                           // mBufferManager.mYUVQueue.poll();
-						mDataListener.onDirty( BitmapFactory.decodeByteArray(tmp,0,tmp.length));
+						Bitmap uuv=BitmapFactory.decodeByteArray(tmp,0,tmp.length);
+						fp=(fp+1)%80;
+						cu1r=uuv;
+						mDataListener.onDirty(uuv);
 					}
-
-
-		            // read image data
-				    //while ((len = inputStream.read(imageBuff)) != -1) {
-	                   // mBufferManager.fillBuffer(imageBuff, len);
-	               // }
 				}
-
 			}
-
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			try {
@@ -137,31 +136,55 @@ public class SocketServer extends Thread {
 					outputStream.close();
 					outputStream = null;
 				}
-				
 				if (inputStream != null) {
 					inputStream.close();
 					inputStream = null;
 				}
-
 				if (socket != null) {
 					socket.close();
 	                socket = null;
 				}
-				
 				if (byteArray != null) {
 					byteArray.close();
 				}
-				
 			} catch (Exception e) {
-
 			}
-
 		}
-		System.out.println("lalalalalshit");
-
 	}
-
 	public void setOnDataListener(DataListener listener) {
 		mDataListener = listener;
+	}
+}
+class MyThread1 extends Thread
+{
+	FaceDetecter detecter = null;
+	Bitmap jk;
+	DataListener dd;
+	SocketServer sss;
+	public MyThread1(DataListener dl,SocketServer ss)
+	{
+		detecter = new FaceDetecter();
+		detecter.init(null, "80caf4640231559778b2715f85c9e41c");
+		dd=dl;
+		sss=ss;
+	}
+	public void run()
+	{
+		while(true) {
+			if(sss.cu1r!=null) {
+				Face[] faceinfo = detecter.findFaces(sss.cu1r);
+				if (faceinfo == null)
+					System.out.println("jjj" + 0);
+				else {
+					System.out.println("jjj" + faceinfo.length);
+					sss.mDataListener.conv(13);
+					sss.add(8);
+					try {
+						Thread.sleep(5000);
+					}catch (Exception e){
+					}
+				}
+			}
+		}
 	}
 }

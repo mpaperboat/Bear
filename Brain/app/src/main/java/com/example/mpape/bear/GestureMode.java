@@ -6,9 +6,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.hardware.Camera;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Message;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -19,7 +19,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
-
+import java.util.LinkedList;
 import java.util.ListIterator;
 public class GestureMode extends Activity implements SurfaceHolder.Callback,GestureDetector.OnGestureListener,DataListener {
     private static Context context = null;
@@ -27,14 +27,28 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
     private SurfaceHolder surfaceholder;
     private ListIterator<Bitmap> it;
     private GestureDetector mGestureDetector;
-    @Override
+    LinkedList<Integer>damn;
+    Handler myHandler;
     protected void onCreate(Bundle savedInstanceState) {
+        damn=new LinkedList<Integer>();
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);//取消标题栏
+        myHandler = new Handler() {
+            public void handleMessage(Message msg) {
+                int t=msg.what;
+                if(t==13){
+                    Toast.makeText(getApplicationContext(), "Found A Human",
+                            Toast.LENGTH_SHORT).show();
+                }
+                if(t==1){
+                    Toast.makeText(getApplicationContext(), "Found Something",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams. FLAG_FULLSCREEN ,
-                WindowManager.LayoutParams. FLAG_FULLSCREEN);//全屏
+                WindowManager.LayoutParams. FLAG_FULLSCREEN);
         setContentView(R.layout.activity_gesture_mode);
-        //mGestureDetector=new GestureDetector(this.surfaceview,this);
         mGestureDetector = new GestureDetector(this, this);
 
         final Button button = (Button) findViewById(R.id.button);
@@ -58,14 +72,17 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
                         Toast.LENGTH_SHORT).show();
             }
         });
+        final Button gray_radio = ( Button) findViewById(R.id.button2);
+        gray_radio.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Cops Are On The Way",
+                        Toast.LENGTH_SHORT).show();
+                ((MyApplication)getApplication()).server.add(1);
+            }
+        });
     }
-
-    @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
-
     }
-
-    @Override
     public void surfaceCreated(SurfaceHolder holder) {
         if(!((MyApplication)getApplication()).phts.isEmpty()){
             paint(((MyApplication)getApplication()).phts.getFirst());
@@ -75,21 +92,16 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
             it=null;
         }
     }
-    @Override
     protected void onPause() {
         super.onPause();
         surfaceview.setVisibility(View.GONE);
-        //surfaceview.d
         sendData("Q");
     }
-    @Override
     protected void onResume() {
         super.onResume();
         surfaceview.setVisibility(View.VISIBLE);
         ((MyApplication)getApplication()).server.setOnDataListener(this);
-
     }
-    @Override
     public void surfaceDestroyed(SurfaceHolder arg0) {
     }
     public void paint(Bitmap m){
@@ -98,12 +110,9 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
             synchronized (surfaceholder) {
                 Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
                 c.drawBitmap(m,null,tmp,new Paint());
-                // System.out.println("draw one img!");
-                // pdate();
             }
             surfaceholder.unlockCanvasAndPost(c);
         }
-        //surfaceview
         System.out.println("wfk");
     }
     private String getActionName(int action) {
@@ -126,81 +135,50 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
         }
         return name;
     }
-    @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        Log.i(getClass().getName(), "onSingleTapUp-----" + getActionName(e.getAction()));
         sendData("Q");
         return false;
     }
-
-    @Override
     public void onLongPress(MotionEvent e) {
-        Log.i(getClass().getName(), "onLongPress-----" + getActionName(e.getAction()));
     }
-
-    @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        Log.i(getClass().getName(),
-                "onScroll-----" + getActionName(e2.getAction()) + ",(" + e1.getX() + "," + e1.getY() + ") ,("
-                        + e2.getX() + "," + e2.getY() + ")");
         return false;
     }
 
-    @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
         System.out.println("zkw"+(e1.getX()-e2.getX()));
-        //大于设定的最小滑动距离并且在水平/竖直方向速度绝对值大于设定的最小速度，则执行相应方法
         if(e1.getX()-e2.getX() > 200 && Math.abs(velocityX) > 200){
-           sendData("A");
-
+            sendData("A");
         }else if(e2.getX() - e1.getX() > 200 && Math.abs(velocityX) > 200){
-            //Toast.makeText(this, "turn right", Toast.LENGTH_SHORT).show();
             sendData("D");
-
         }else if(e1.getY()-e2.getY() > 200 && Math.abs(velocityY) > 200){
-           // Toast.makeText(MainActivity.this, "turn up", Toast.LENGTH_SHORT).show();
             sendData("W");
-
         }else if(e2.getY()-e1.getY() > 200 && Math.abs(velocityY) > 200){
             sendData("S");
         }else{
             sendData("Q");
         }
-
         return false;
     }
-
-
-    @Override
     public void onShowPress(MotionEvent e) {
-        Log.i(getClass().getName(), "onShowPress-----" + getActionName(e.getAction()));
     }
-
-    @Override
     public boolean onDown(MotionEvent e) {
-        Log.i(getClass().getName(), "onDown-----" + getActionName(e.getAction()));
         return false;
     }
-    @Override
     public boolean onTouchEvent(MotionEvent event) {
-        //Log.d(TAG, "+ onTouchEvent(event:" + event + ")");
         mGestureDetector.onTouchEvent(event);
-       // Log.d(TAG, "- onTouchEvent()");
         return true;
     }
     public void onDirty(Bitmap bufferedImage) {
-        // TODO Auto-generated method stub
         updateUI(bufferedImage);
     }
     private void updateUI(Bitmap bufferedImage) {
-
         synchronized (((MyApplication)getApplication()).mQueue) {
             if (((MyApplication)getApplication()).mQueue.size() ==  ((MyApplication)getApplication()).MAX_BUFFER) {
                 ((MyApplication)getApplication()).mLastFrame = ((MyApplication)getApplication()).mQueue.poll();
             }
             ((MyApplication)getApplication()).mQueue.add(bufferedImage);
         }
-
         repaint();
     }
     public void repaint() {
@@ -215,12 +193,9 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
                     c.drawBitmap(((MyApplication)getApplication()).mLastFrame,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
                 }
                 surfaceholder.unlockCanvasAndPost(c);
             }
-            //g.drawImage(mLastFrame, 0, 0, null);
         }
         else if (((MyApplication)getApplication()).mImage != null) {
             Canvas c=surfaceholder.lockCanvas();
@@ -228,22 +203,34 @@ public class GestureMode extends Activity implements SurfaceHolder.Callback,Gest
                 synchronized (surfaceholder) {
                     Rect tmp=new Rect(0,0,c.getWidth(),c.getHeight());
                     c.drawBitmap(((MyApplication)getApplication()).mImage,null,tmp,new Paint());
-                    // System.out.println("draw one img!");
-                    // pdate();
                 }
                 surfaceholder.unlockCanvasAndPost(c);
             }
-            //g.drawImage(mImage, 0, 0, null);
+        }
+        if(damn.size()!=0){
+            int t=damn.poll();
+            if(t==13){
+                Toast.makeText(getApplicationContext(), "Found A Human",
+                        Toast.LENGTH_SHORT).show();
+            }
+            if(t==1){
+                Toast.makeText(getApplicationContext(), "Found Something",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
     boolean sendData(String m){
         try{
             String msg = m;
             ((MyApplication)getApplication()).mmOutputStream.write(msg.getBytes());
-            // System.out.println("Data Sent");
             return true;
         }catch (Exception e){
             return false;
         }
+    }
+    public void conv(int t){
+        Message msg=new Message();
+        msg.what=t;
+        myHandler.sendMessage(msg);
     }
 }

@@ -116,11 +116,11 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" />
 
-        <CheckBox
+        <Button
             android:layout_width="80dp"
             android:layout_height="40dp"
             android:textAllCaps="false"
-            android:text="       Light"
+            android:text="Alert"
             android:id="@+id/button2"
             android:background="@drawable/lee2"
             android:button="@null"
@@ -129,7 +129,8 @@
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
             android:layout_marginTop="20dp"
-            android:checked="false" />
+            android:checked="false"
+            />
 
     </RelativeLayout>
 </RelativeLayout>
